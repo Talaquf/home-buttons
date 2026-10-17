@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Home</title>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="application-name" content="Home">
+<meta name="apple-mobile-web-app-title" content="Home">
+<style>
+  :root { --bg:#0b0f14; --card:#141a22; --line:#232b36; --fg:#e8edf3; --muted:#7d8896;
+          --on:#ffc94d; --night:#6c7cff; --ok:#4cc38a; --bad:#ff6b6b; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; min-height:100%; background:var(--bg); color:var(--fg);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:460px; margin:0 auto; padding:max(20px, env(safe-area-inset-top)) 18px 28px;
+    display:flex; flex-direction:column; gap:18px; }
+  header h1 { margin:0; font-size:26px; }
+  header p { margin:4px 0 0; color:var(--muted); font-size:14px; }
+  .status { display:flex; gap:10px; }
+  .chip { flex:1; background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:12px; font-size:14px; display:flex; align-items:center; gap:8px; }
+  .chip b { font-size:16px; }
+  .chip.bad { border-color:var(--bad); color:var(--bad); }
+  .chip.ok b { color:var(--ok); }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .tile { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:18px 16px;
+    text-align:left; color:var(--fg); cursor:pointer; display:flex; flex-direction:column; gap:14px;
+    min-height:132px; transition:all .3s ease; font:inherit; }
+  .tile .ic { font-size:34px; width:56px; height:56px; border-radius:50%; display:grid; place-items:center;
+    background:#1e2530; transition:all .3s ease; filter:grayscale(1) brightness(.8); }
+  .tile .nm { font-weight:650; font-size:16px; }
+  .tile .st { color:var(--muted); font-size:13px; margin-top:-10px; }
+  .tile.on { border-color:#6b5520; background:linear-gradient(160deg,#2a2412,#151a20 70%); }
+  .tile.on .ic { background:radial-gradient(circle,#fff1bf,var(--on) 70%); filter:none;
+    box-shadow:0 0 28px 4px #ffc94d55; }
+  .tile.on .st { color:var(--on); }
+  .tile.busy { animation:pulse 1s ease-in-out infinite; }
+  .tile:active { transform:scale(.97); }
+  #goodnight { grid-column:1 / -1; border:none; border-radius:20px; padding:20px; cursor:pointer;
+    background:linear-gradient(135deg,#2b2f6b,#141833); color:#dfe3ff; font:inherit; font-size:18px;
+    font-weight:700; display:flex; align-items:center; justify-content:center; gap:12px;
+    box-shadow:inset 0 0 0 1px #3c4290; }
+  #goodnight span { font-size:28px; }
+  #goodnight.busy { animation:pulse 1s ease-in-out infinite; }
+  #banner { display:none; border-radius:16px; padding:14px 16px; font-size:15px; line-height:1.5;
+    background:#161b3a; border:1px solid #3c4290; }
+  #banner.bad { background:#3a1616; border-color:var(--bad); }
+  #note { text-align:center; color:var(--muted); font-size:12px; min-height:1.2em; }
+  @keyframes pulse { 50% { opacity:.55; } }
+  main { padding-bottom:96px; }
+  section[hidden] { display:none !important; }
+  section { display:flex; flex-direction:column; gap:18px; }
+  nav { position:fixed; left:0; right:0; bottom:0; display:flex; justify-content:center; gap:8px;
+    padding:10px 16px max(12px, env(safe-area-inset-bottom)); background:#0b0f14ee;
+    border-top:1px solid var(--line); backdrop-filter:blur(10px); }
+  nav button { flex:1; max-width:210px; background:none; border:none; color:var(--muted); font:inherit;
+    font-size:13px; padding:8px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column;
+    align-items:center; gap:2px; }
+  nav button span { font-size:22px; }
+  nav button.active { color:var(--fg); background:var(--card); }
+  .app { display:flex; align-items:center; gap:16px; background:var(--card); border:1px solid var(--line);
+    border-radius:20px; padding:16px; }
+  .app img { width:72px; height:72px; border-radius:18px; }
+  .app b { font-size:18px; } .app p { margin:4px 0 0; color:var(--muted); font-size:13px; }
+  #installBtn { border:none; border-radius:16px; padding:18px; font:inherit; font-size:17px; font-weight:700;
+    background:linear-gradient(135deg,#ffd466,#e0a020); color:#2b1d00; cursor:pointer; }
+  .done { background:#12291f; border:1px solid var(--ok); color:#bdf0d6; border-radius:16px; padding:14px 16px; }
+  .steps { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:6px 16px; }
+  .steps h3 { margin:14px 0 6px; font-size:15px; }
+  .steps ol { margin:0 0 14px; padding-left:22px; color:#cfd6df; font-size:14px; line-height:1.7; }
+  .key { display:inline-block; background:#232b36; border-radius:6px; padding:0 7px; font-size:13px; color:var(--fg); }
+  .hint { color:var(--muted); font-size:12.5px; line-height:1.5; }
+</style>
+</head>
+<body>
+<main>
+ <section id="tab-controls">
+  <header>
+    <h1 id="hello">Home</h1>
+    <p>Tap a tile to switch it</p>
+  </header>
+
+  <div class="status">
+    <div class="chip" id="door">🔐 <span>Door <b>…</b></span></div>
+    <div class="chip" id="count">💡 <span><b>…</b> lights on</span></div>
+  </div>
+
+  <div class="grid">
+    <button class="tile" data-t="curtain"><div class="ic">🪟</div><div class="nm">Curtain light</div><div class="st">…</div></button>
+    <button class="tile" data-t="food"><div class="ic">🍽️</div><div class="nm">Food table</div><div class="st">…</div></button>
+    <button class="tile" data-t="server"><div class="ic">🖥️</div><div class="nm">Server room</div><div class="st">…</div></button>
+    <button class="tile" id="refresh" style="justify-content:center;align-items:center;text-align:center">
+      <div class="ic" style="filter:none">🔄</div><div class="st" style="margin:0">Refresh</div></button>
+    <button id="goodnight"><span>🌙</span> Goodnight</button>
+  </div>
+
+  <div id="banner"></div>
+  <div id="note">Connecting to home…</div>
+ </section>
+
+ <section id="tab-install" hidden>
+  <header>
+    <h1>Install on your phone</h1>
+    <p>Put this on your home screen so it opens like an app</p>
+  </header>
+  <div class="app">
+    <img src="icon-192.png" alt="">
+    <div><b>Home</b><p>Lights &amp; goodnight · works anywhere</p></div>
+  </div>
+
+  <div class="done" id="installed" hidden>✅ <b>You're using the installed app.</b> Nothing else to do.</div>
+  <button id="installBtn" hidden>📲 Add to home screen</button>
+
+  <div class="steps" id="steps">
+    <h3>Samsung Internet</h3>
+    <ol>
+      <li>Tap the menu <span class="key">≡</span> at the bottom right</li>
+      <li>Tap <span class="key">+ Add page to</span> → <span class="key">Home screen</span></li>
+      <li>Keep the name <b>Home</b> and tap <span class="key">Add</span></li>
+    </ol>
+    <h3>Chrome</h3>
+    <ol>
+      <li>Tap the menu <span class="key">⋮</span> at the top right</li>
+      <li>Tap <span class="key">Add to Home screen</span> (or <span class="key">Install app</span>)</li>
+      <li>Tap <span class="key">Add</span>, then <span class="key">Add</span> again to place the icon</li>
+    </ol>
+    <h3>iPhone (Safari)</h3>
+    <ol>
+      <li>Tap Share <span class="key">⬆︎</span> → <span class="key">Add to Home Screen</span> → <span class="key">Add</span></li>
+    </ol>
+  </div>
+  <p class="hint" id="fileHint">Your private key is stored only on this phone. Never share your personal setup link.</p>
+ </section>
+</main>
+
+<nav>
+  <button class="active" data-tab="controls"><span>💡</span>Controls</button>
+  <button data-tab="install"><span>📲</span>Install</button>
+</nav>
+<script>
+const NTFY = "https://ntfy.sh";
+const hp = new URLSearchParams(location.hash.slice(1));
+if (hp.get("c") && hp.get("s")) {
+  localStorage.setItem("home.cmd", hp.get("c")); localStorage.setItem("home.state", hp.get("s"));
+  history.replaceState(null, "", location.pathname);  // hide the private part from the address bar
+}
+const CMD = localStorage.getItem("home.cmd"), STATE = localStorage.getItem("home.state");
+if (!CMD || !STATE) {
+  document.querySelector("main").innerHTML = '<section><header><h1>Not set up</h1>' +
+    '<p>Open your personal link once on this phone to connect it to your home.</p></header></section>';
+  document.querySelector("nav").remove();
+  throw new Error("no private link");
+}
+const $ = s => document.querySelector(s), note = $("#note"), banner = $("#banner");
+let timer = null;
+
+const h = new Date().getHours();
+$("#hello").textContent = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+
+function render(m) {
+  clearTimeout(timer);
+  document.querySelectorAll(".busy").forEach(e => e.classList.remove("busy"));
+  for (const [k, s] of Object.entries(m.states || {})) {
+    const t = document.querySelector(`.tile[data-t="${k}"]`); if (!t) continue;
+    t.classList.toggle("on", s === "on");
+    t.querySelector(".st").textContent = s === "on" ? "On" : s === "off" ? "Off" : "Unavailable";
+  }
+  const locked = m.door === "locked", door = $("#door");
+  door.className = "chip " + (locked ? "ok" : "bad");
+  door.innerHTML = (locked ? "🔐" : "🔓") + ` <span>Door <b>${locked ? "locked" : (m.door || "?")}</b></span>`;
+  $("#count b").textContent = m.lights_on ?? "?";
+  if (m.event === "goodnight") {
+    banner.style.display = "block";
+    banner.className = locked ? "" : "bad";
+    banner.innerHTML = locked
+      ? `🌙 <b>Goodnight!</b> ${m.lights_on ? m.lights_on + " light(s) still report on." : "All lights are off."} The front door is locked.`
+      : `⚠️ <b>Lights ${m.lights_on ? "sent off" : "are off"}, but the front door is ${m.door}.</b> Lock it before you sleep.`;
+  }
+  note.textContent = "Updated " + new Date(m.ts * 1000).toLocaleTimeString();
+}
+
+async function send(cmd, el) {
+  if (el) el.classList.add("busy");
+  note.textContent = "Sending…";
+  clearTimeout(timer);
+  timer = setTimeout(() => { document.querySelectorAll(".busy").forEach(e => e.classList.remove("busy"));
+    note.textContent = "⚠️ No answer from home. Is the relay running?"; }, 12000);
+  try { await fetch(`${NTFY}/${CMD}`, { method: "POST", body: cmd }); }
+  catch (e) { note.textContent = "⚠️ No internet connection"; }
+}
+
+const es = new EventSource(`${NTFY}/${STATE}/sse`);
+es.onmessage = ev => { try { render(JSON.parse(JSON.parse(ev.data).message)); } catch (e) {} };
+es.onopen = () => send("status");
+
+document.querySelectorAll(".tile[data-t]").forEach(t => t.onclick = () => send(t.dataset.t + "_toggle", t));
+$("#refresh").onclick = () => send("status", $("#refresh"));
+$("#goodnight").onclick = () => {
+  if (confirm("Turn off all the lights in the house?")) { banner.style.display = "none"; send("goodnight", $("#goodnight")); }
+};
+document.addEventListener("visibilitychange", () => { if (!document.hidden) send("status"); });
+
+// Tabs
+function showTab(name) {
+  document.querySelectorAll("section").forEach(s => s.hidden = s.id !== "tab-" + name);
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+
+// Install: one-tap button when the browser offers it (needs https); otherwise the steps
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+if (standalone) {
+  $("#installed").hidden = false; $("#steps").hidden = true;
+  document.querySelector('nav button[data-tab="install"]').style.display = "none";
+}
+let deferred = null;
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; $("#installBtn").hidden = false; });
+$("#installBtn").onclick = async () => {
+  if (!deferred) return; deferred.prompt();
+  const { outcome } = await deferred.userChoice; deferred = null;
+  if (outcome === "accepted") { $("#installBtn").hidden = true; $("#installed").hidden = false; }
+};
+addEventListener("appinstalled", () => { $("#installBtn").hidden = true; $("#installed").hidden = false; });
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>
