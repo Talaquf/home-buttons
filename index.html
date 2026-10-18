@@ -76,6 +76,17 @@
   .steps ol { margin:0 0 14px; padding-left:22px; color:#cfd6df; font-size:14px; line-height:1.7; }
   .key { display:inline-block; background:#232b36; border-radius:6px; padding:0 7px; font-size:13px; color:var(--fg); }
   .hint { color:var(--muted); font-size:12.5px; line-height:1.5; }
+  .upd { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:16px;
+    display:flex; flex-direction:column; gap:12px; }
+  .upd .row { display:flex; justify-content:space-between; align-items:center; font-size:14px; color:var(--muted); }
+  .upd .row b { color:var(--fg); }
+  #updBtn { border:1px solid #2f3a48; background:#1a212b; color:var(--fg); border-radius:14px; padding:14px;
+    font:inherit; font-size:16px; font-weight:650; cursor:pointer; }
+  #updBtn:active { background:#222b37; }
+  #updMsg { font-size:13px; color:var(--muted); min-height:1.2em; text-align:center; }
+  #updBanner { display:none; border:none; border-radius:16px; padding:14px 16px; font:inherit; font-size:15px;
+    text-align:left; cursor:pointer; background:linear-gradient(135deg,#1f3d2e,#14251d); color:#c8f5dc;
+    box-shadow:inset 0 0 0 1px #2f7a55; }
 </style>
 </head>
 <body>
@@ -85,6 +96,8 @@
     <h1 id="hello">Home</h1>
     <p>Tap a tile to switch it</p>
   </header>
+
+  <button id="updBanner">✨ <b>Update available</b>. Tap to update now</button>
 
   <div class="status">
     <div class="chip" id="door">🔐 <span>Door <b>…</b></span></div>
@@ -106,8 +119,8 @@
 
  <section id="tab-install" hidden>
   <header>
-    <h1>Install on your phone</h1>
-    <p>Put this on your home screen so it opens like an app</p>
+    <h1>App</h1>
+    <p>Install on your phone and get updates</p>
   </header>
   <div class="app">
     <img src="icon-192.png" alt="">
@@ -135,15 +148,21 @@
       <li>Tap Share <span class="key">⬆︎</span> → <span class="key">Add to Home Screen</span> → <span class="key">Add</span></li>
     </ol>
   </div>
+  <div class="upd">
+    <div class="row"><span>Version</span><b id="verNow">…</b></div>
+    <button id="updBtn">🔄 Check for updates</button>
+    <div id="updMsg"></div>
+  </div>
   <p class="hint" id="fileHint">Your private key is stored only on this phone. Never share your personal setup link.</p>
  </section>
 </main>
 
 <nav>
   <button class="active" data-tab="controls"><span>💡</span>Controls</button>
-  <button data-tab="install"><span>📲</span>Install</button>
+  <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
+const APP_VERSION = "2026.10.18-1";
 const NTFY = "https://ntfy.sh";
 const hp = new URLSearchParams(location.hash.slice(1));
 if (hp.get("c") && hp.get("s")) {
@@ -204,7 +223,7 @@ $("#refresh").onclick = () => send("status", $("#refresh"));
 $("#goodnight").onclick = () => {
   if (confirm("Turn off all the lights in the house?")) { banner.style.display = "none"; send("goodnight", $("#goodnight")); }
 };
-document.addEventListener("visibilitychange", () => { if (!document.hidden) send("status"); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { send("status"); checkUpdates(false); } });
 
 // Tabs
 function showTab(name) {
@@ -217,7 +236,6 @@ document.querySelectorAll("nav button").forEach(b => b.onclick = () => showTab(b
 const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
 if (standalone) {
   $("#installed").hidden = false; $("#steps").hidden = true;
-  document.querySelector('nav button[data-tab="install"]').style.display = "none";
 }
 let deferred = null;
 addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; $("#installBtn").hidden = false; });
@@ -228,6 +246,40 @@ $("#installBtn").onclick = async () => {
 };
 addEventListener("appinstalled", () => { $("#installBtn").hidden = true; $("#installed").hidden = false; });
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+
+// Updates: compare with version.json on the server; if newer, refresh every file and reload
+const FILES = ["./", "index.html", "manifest.webmanifest", "sw.js", "icon-192.png", "icon-512.png"];
+$("#verNow").textContent = APP_VERSION;
+async function latest() {
+  const r = await fetch("version.json?t=" + Date.now(), { cache: "no-store" });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+async function applyUpdate(v) {
+  $("#updMsg").textContent = `Updating to ${v.version}…`;
+  await Promise.all(FILES.map(u => fetch(u, { cache: "reload" }).catch(() => {})));
+  const reg = "serviceWorker" in navigator && await navigator.serviceWorker.getRegistration();
+  if (reg) await reg.update().catch(() => {});
+  location.reload();
+}
+async function checkUpdates(manual) {
+  if (manual) $("#updMsg").textContent = "Checking…";
+  try {
+    const v = await latest();
+    if (v.version !== APP_VERSION) {
+      if (manual) return applyUpdate(v);
+      const b = $("#updBanner"); b.style.display = "block";
+      b.innerHTML = `✨ <b>Update available</b> (${v.version})${v.notes ? ": " + v.notes : ""}. Tap to update now`;
+      b.onclick = () => { showTab("install"); applyUpdate(v); };
+    } else if (manual) {
+      $("#updMsg").textContent = `✅ You're on the latest version (${APP_VERSION})`;
+    }
+  } catch (e) {
+    if (manual) $("#updMsg").textContent = "⚠️ Couldn't check. Are you online?";
+  }
+}
+$("#updBtn").onclick = () => checkUpdates(true);
+checkUpdates(false);
 </script>
 </body>
 </html>
