@@ -48,27 +48,30 @@
     box-shadow:inset 0 0 0 1px #3c4290; }
   #goodnight span { font-size:28px; }
   #goodnight.busy { animation:pulse 1s ease-in-out infinite; }
-  .garage { grid-column:1 / -1; background:var(--card); border:1px solid var(--line); border-radius:20px;
-    padding:16px; display:flex; flex-direction:column; gap:14px; transition:all .3s ease; }
-  .garage .top { display:flex; align-items:center; gap:14px; }
-  .garage .ic { font-size:30px; width:56px; height:56px; border-radius:50%; display:grid; place-items:center;
-    background:#1e2530; flex:none; }
-  .garage .nm { font-weight:650; font-size:16px; }
-  .garage .st { color:var(--muted); font-size:13px; margin-top:2px; }
-  .garage.open { border-color:#6b5520; background:linear-gradient(160deg,#2a2412,#151a20 70%); }
-  .garage.open .st { color:var(--on); }
-  .garage.closed .st { color:var(--ok); }
-  .garage.moving .ic { animation:pulse 1s ease-in-out infinite; }
-  .garage.alert { border-color:var(--bad); } .garage.alert .st { color:var(--bad); }
-  .garage .btns { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-  .garage .btns button { border:1px solid #2f3a48; background:#1a212b; color:var(--fg); border-radius:14px;
-    padding:12px 4px; font:inherit; font-size:15px; font-weight:650; cursor:pointer; }
-  .garage .btns button:active { background:#222b37; transform:scale(.97); }
-  .garage .btns button.busy { animation:pulse 1s ease-in-out infinite; }
   #banner { display:none; border-radius:16px; padding:14px 16px; font-size:15px; line-height:1.5;
     background:#161b3a; border:1px solid #3c4290; }
   #banner.bad { background:#3a1616; border-color:var(--bad); }
-  #note { text-align:center; color:var(--muted); font-size:12px; min-height:1.2em; }
+  /* Garage page: buttons styled like the HA (Frosted Glass) button cards */
+  .pills { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .pill { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:10px 4px;
+    display:flex; flex-direction:column; align-items:center; gap:2px; text-align:center; min-width:0; }
+  .pill small { color:var(--muted); font-size:12px; }
+  .pill b { font-size:14px; }
+  .pill.ok b { color:var(--ok); } .pill.warn b { color:#ff9f0a; } .pill.bad { border-color:var(--bad); } .pill.bad b { color:var(--bad); }
+  .gbtns { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .gbtn { min-height:112px; border-radius:22px; border:1px solid rgba(255,255,255,.09); cursor:pointer;
+    background:linear-gradient(160deg,rgba(120,140,170,.20),rgba(60,70,90,.16) 60%,rgba(40,46,60,.22));
+    box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    color:#e6e8ec; font:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:8px; padding:12px 4px; transition:transform .12s ease, background .3s ease; }
+  .gbtn svg { width:40px; height:40px; fill:currentColor; }
+  .gbtn span { font-size:18px; font-weight:500; letter-spacing:.2px; }
+  .gbtn:active { transform:scale(.96); background:linear-gradient(160deg,rgba(150,170,200,.30),rgba(70,80,100,.22)); }
+  .gbtn.busy { animation:pulse 1s ease-in-out infinite; }
+  .gbtn.now-open { background:linear-gradient(160deg,rgba(255,159,10,.30),rgba(60,50,30,.25)); border-color:rgba(255,159,10,.45); }
+  .gbtn.now-close { background:linear-gradient(160deg,rgba(10,132,255,.30),rgba(30,45,70,.25)); border-color:rgba(10,132,255,.45); }
+  #note, #gNote { text-align:center; color:var(--muted); font-size:12px; min-height:1.2em; }
   @keyframes pulse { 50% { opacity:.55; } }
   main { padding-bottom:96px; }
   section[hidden] { display:none !important; }
@@ -113,15 +116,15 @@
 </head>
 <body>
 <main>
- <section id="tab-controls">
+  <button class="mode" id="localBtn">🏠 <b>Internet route isn't answering.</b> Tap to switch to local mode (works on home Wi-Fi without internet)</button>
+  <button class="mode" id="netBtn" style="background:linear-gradient(135deg,#14283a,#0d1a26);color:#cfe6ff;box-shadow:inset 0 0 0 1px #2f5f8a">🌐 Back to internet mode</button>
+  <button id="updBanner">✨ <b>Update available</b>. Tap to update now</button>
+ <section id="tab-controls" hidden>
   <header>
     <h1 id="hello">Home</h1>
     <p id="sub">Tap a tile to switch it</p>
   </header>
 
-  <button class="mode" id="localBtn">🏠 <b>Internet route isn't answering.</b> Tap to switch to local mode (works on home Wi-Fi without internet)</button>
-  <button class="mode" id="netBtn" style="background:linear-gradient(135deg,#14283a,#0d1a26);color:#cfe6ff;box-shadow:inset 0 0 0 1px #2f5f8a">🌐 Back to internet mode</button>
-  <button id="updBanner">✨ <b>Update available</b>. Tap to update now</button>
 
   <div class="status">
     <div class="chip" id="door">🔐 <span>Door <b>…</b></span></div>
@@ -134,18 +137,29 @@
     <button class="tile" data-t="mens"><div class="ic">🛋️</div><div class="nm">Men's sitting room</div><div class="st">…</div></button>
     <button class="tile" id="refresh" style="justify-content:center;align-items:center;text-align:center">
       <div class="ic" style="filter:none">🔄</div><div class="st" style="margin:0">Refresh</div></button>
-    <div class="garage" id="garage">
-      <div class="top"><div class="ic">🚗</div>
-        <div><div class="nm">Garage</div><div class="st">…</div></div></div>
-      <div class="btns">
-        <button data-g="open">⬆️ Open</button><button data-g="stop">⏹ Stop</button><button data-g="close">⬇️ Close</button>
-      </div>
-    </div>
     <button id="goodnight"><span>🌙</span> Goodnight</button>
   </div>
 
   <div id="banner"></div>
-  <div id="note">Connecting to home…</div>
+  <div id="note" class="note">Connecting to home…</div>
+ </section>
+
+ <section id="tab-garage">
+  <header>
+    <h1>Garage</h1>
+    <p id="gSub">…</p>
+  </header>
+  <div class="pills">
+    <div class="pill" id="pDoor"><small>Door</small><b>…</b></div>
+    <div class="pill" id="pSafe"><small>Safety</small><b>…</b></div>
+    <div class="pill" id="pCar"><small>Parking</small><b>…</b></div>
+  </div>
+  <div class="gbtns">
+    <button class="gbtn" data-g="open"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12Z"/></svg><span>Open</span></button>
+    <button class="gbtn" data-g="stop"><svg viewBox="0 0 24 24"><path d="M18,18H6V6H18V18Z"/></svg><span>Stop</span></button>
+    <button class="gbtn" data-g="close"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z"/></svg><span>Close</span></button>
+  </div>
+  <div id="gNote" class="note"></div>
  </section>
 
  <section id="tab-install" hidden>
@@ -194,11 +208,12 @@
 </main>
 
 <nav>
-  <button class="active" data-tab="controls"><span>💡</span>Controls</button>
+  <button class="active" data-tab="garage"><span>🚗</span>Garage</button>
+  <button data-tab="controls"><span>💡</span>Controls</button>
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.10.20-2";
+const APP_VERSION = "2026.10.21-1";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -215,7 +230,8 @@ if (!CMD || !STATE) {
   document.querySelector("nav").remove();
   throw new Error("no private link");
 }
-const $ = s => document.querySelector(s), note = $("#note"), banner = $("#banner");
+const $ = s => document.querySelector(s), banner = $("#banner"),
+  note = { set textContent(t) { document.querySelectorAll(".note").forEach(e => e.textContent = t); } };
 let timer = null, gPoll = null, gPolls = 0;
 
 const h = new Date().getHours();
@@ -233,12 +249,15 @@ function render(m) {
   door.className = "chip " + (locked ? "ok" : "bad");
   door.innerHTML = (locked ? "🔐" : "🔓") + ` <span>Door <b>${locked ? "locked" : (m.door || "?")}</b></span>`;
   $("#count b").textContent = m.lights_on ?? "?";
-  const g = m.garage || "?", gEl = $("#garage"), moving = g === "opening" || g === "closing";
-  const known = ["open", "closed", "opening", "closing"].includes(g);
-  gEl.className = "garage " + (m.garage_obstruction || !known ? "alert" : moving ? "moving open" : g);
-  gEl.querySelector(".st").textContent =
-    (known ? g[0].toUpperCase() + g.slice(1) : "Unavailable") +
-    (m.garage_obstruction ? " · ⚠️ obstruction" : "") + (m.garage_car ? " · car inside" : "");
+  const g = m.garage || "?", moving = g === "opening" || g === "closing";
+  const known = ["open", "closed", "opening", "closing"].includes(g), G = known ? g[0].toUpperCase() + g.slice(1) : "Unavailable";
+  const pill = (id, cls, txt) => { const e = $(id); e.className = "pill " + cls; e.querySelector("b").textContent = txt; };
+  pill("#pDoor", !known ? "bad" : g === "closed" ? "ok" : "warn", G);
+  pill("#pSafe", m.garage_obstruction ? "bad" : "ok", m.garage_obstruction ? "Obstructed" : "Clear");
+  pill("#pCar", "", m.garage_car ? "Car in" : "Empty");
+  $("#gSub").textContent = moving ? `Door ${g}…` : known ? `Door ${g}` : "Door status unavailable";
+  document.querySelector('.gbtn[data-g="open"]').classList.toggle("now-open", g === "opening" || g === "open");
+  document.querySelector('.gbtn[data-g="close"]').classList.toggle("now-close", g === "closing");
   // while the door moves (~18 s), ask again every 3 s until it settles (max ~45 s)
   clearTimeout(gPoll);
   if (moving && gPolls < 15) { gPolls++; gPoll = setTimeout(() => send("status"), 3000); } else if (!moving) gPolls = 0;

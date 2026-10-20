@@ -1,4 +1,4 @@
 {
-  "version": "2026.10.20-2",
-  "notes": "Garage: open / stop / close with door status, car-inside and obstruction; Goodnight warns if the garage is open"
+  "version": "2026.10.21-1",
+  "notes": "Garage has its own page (bottom tab) with HA-style Open / Stop / Close buttons and Door / Safety / Parking status"
 }
