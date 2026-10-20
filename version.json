@@ -1,4 +1,4 @@
 {
-  "version": "2026.10.20-1",
-  "notes": "Men's sitting room tile (all lights on/off) replaces Server room; local mode; app opens offline"
+  "version": "2026.10.20-2",
+  "notes": "Garage: open / stop / close with door status, car-inside and obstruction; Goodnight warns if the garage is open"
 }

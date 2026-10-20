@@ -48,6 +48,23 @@
     box-shadow:inset 0 0 0 1px #3c4290; }
   #goodnight span { font-size:28px; }
   #goodnight.busy { animation:pulse 1s ease-in-out infinite; }
+  .garage { grid-column:1 / -1; background:var(--card); border:1px solid var(--line); border-radius:20px;
+    padding:16px; display:flex; flex-direction:column; gap:14px; transition:all .3s ease; }
+  .garage .top { display:flex; align-items:center; gap:14px; }
+  .garage .ic { font-size:30px; width:56px; height:56px; border-radius:50%; display:grid; place-items:center;
+    background:#1e2530; flex:none; }
+  .garage .nm { font-weight:650; font-size:16px; }
+  .garage .st { color:var(--muted); font-size:13px; margin-top:2px; }
+  .garage.open { border-color:#6b5520; background:linear-gradient(160deg,#2a2412,#151a20 70%); }
+  .garage.open .st { color:var(--on); }
+  .garage.closed .st { color:var(--ok); }
+  .garage.moving .ic { animation:pulse 1s ease-in-out infinite; }
+  .garage.alert { border-color:var(--bad); } .garage.alert .st { color:var(--bad); }
+  .garage .btns { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+  .garage .btns button { border:1px solid #2f3a48; background:#1a212b; color:var(--fg); border-radius:14px;
+    padding:12px 4px; font:inherit; font-size:15px; font-weight:650; cursor:pointer; }
+  .garage .btns button:active { background:#222b37; transform:scale(.97); }
+  .garage .btns button.busy { animation:pulse 1s ease-in-out infinite; }
   #banner { display:none; border-radius:16px; padding:14px 16px; font-size:15px; line-height:1.5;
     background:#161b3a; border:1px solid #3c4290; }
   #banner.bad { background:#3a1616; border-color:var(--bad); }
@@ -117,6 +134,13 @@
     <button class="tile" data-t="mens"><div class="ic">🛋️</div><div class="nm">Men's sitting room</div><div class="st">…</div></button>
     <button class="tile" id="refresh" style="justify-content:center;align-items:center;text-align:center">
       <div class="ic" style="filter:none">🔄</div><div class="st" style="margin:0">Refresh</div></button>
+    <div class="garage" id="garage">
+      <div class="top"><div class="ic">🚗</div>
+        <div><div class="nm">Garage</div><div class="st">…</div></div></div>
+      <div class="btns">
+        <button data-g="open">⬆️ Open</button><button data-g="stop">⏹ Stop</button><button data-g="close">⬇️ Close</button>
+      </div>
+    </div>
     <button id="goodnight"><span>🌙</span> Goodnight</button>
   </div>
 
@@ -131,7 +155,7 @@
   </header>
   <div class="app">
     <img src="icon-192.png" alt="">
-    <div><b>Home</b><p>Lights &amp; goodnight · works anywhere</p></div>
+    <div><b>Home</b><p>Lights, garage &amp; goodnight · works anywhere</p></div>
   </div>
 
   <div class="done" id="installed" hidden>✅ <b>You're using the installed app.</b> Nothing else to do.</div>
@@ -174,7 +198,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.10.20-1";
+const APP_VERSION = "2026.10.20-2";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -192,7 +216,7 @@ if (!CMD || !STATE) {
   throw new Error("no private link");
 }
 const $ = s => document.querySelector(s), note = $("#note"), banner = $("#banner");
-let timer = null;
+let timer = null, gPoll = null, gPolls = 0;
 
 const h = new Date().getHours();
 $("#hello").textContent = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
@@ -209,12 +233,25 @@ function render(m) {
   door.className = "chip " + (locked ? "ok" : "bad");
   door.innerHTML = (locked ? "🔐" : "🔓") + ` <span>Door <b>${locked ? "locked" : (m.door || "?")}</b></span>`;
   $("#count b").textContent = m.lights_on ?? "?";
+  const g = m.garage || "?", gEl = $("#garage"), moving = g === "opening" || g === "closing";
+  const known = ["open", "closed", "opening", "closing"].includes(g);
+  gEl.className = "garage " + (m.garage_obstruction || !known ? "alert" : moving ? "moving open" : g);
+  gEl.querySelector(".st").textContent =
+    (known ? g[0].toUpperCase() + g.slice(1) : "Unavailable") +
+    (m.garage_obstruction ? " · ⚠️ obstruction" : "") + (m.garage_car ? " · car inside" : "");
+  // while the door moves (~18 s), ask again every 3 s until it settles (max ~45 s)
+  clearTimeout(gPoll);
+  if (moving && gPolls < 15) { gPolls++; gPoll = setTimeout(() => send("status"), 3000); } else if (!moving) gPolls = 0;
   if (m.event === "goodnight") {
     banner.style.display = "block";
     banner.className = locked ? "" : "bad";
     banner.innerHTML = locked
       ? `🌙 <b>Goodnight!</b> ${m.lights_on ? m.lights_on + " light(s) still report on." : "All lights are off."} The front door is locked.`
       : `⚠️ <b>Lights ${m.lights_on ? "sent off" : "are off"}, but the front door is ${m.door}.</b> Lock it before you sleep.`;
+    if (m.garage && m.garage !== "closed") {
+      banner.className = "bad";
+      banner.innerHTML += ` <br>🚗 <b>The garage is ${m.garage}.</b>`;
+    }
   }
   note.textContent = "Updated " + new Date(m.ts * 1000).toLocaleTimeString();
 }
@@ -266,6 +303,12 @@ $("#modeHint").textContent = LOCAL
   : "Local mode skips the internet and talks straight to the NAS. Use it on home Wi-Fi when the internet is down.";
 
 document.querySelectorAll(".tile[data-t]").forEach(t => t.onclick = () => send(t.dataset.t + "_toggle", t));
+const G_ASK = { open: "Open the garage door?", close: "Close the garage door?\nMake sure nothing is in the way." };
+document.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
+  const a = b.dataset.g;
+  if (G_ASK[a] && !confirm(G_ASK[a])) return;
+  gPolls = 0; send("garage_" + a, b);
+});
 $("#refresh").onclick = () => send("status", $("#refresh"));
 $("#goodnight").onclick = () => {
   if (confirm("Turn off all the lights in the house?")) { banner.style.display = "none"; send("goodnight", $("#goodnight")); }
