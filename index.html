@@ -84,6 +84,11 @@
     font:inherit; font-size:16px; font-weight:650; cursor:pointer; }
   #updBtn:active { background:#222b37; }
   #updMsg { font-size:13px; color:var(--muted); min-height:1.2em; text-align:center; }
+  .mode { display:none; border:none; border-radius:16px; padding:14px 16px; font:inherit; font-size:15px;
+    text-align:left; cursor:pointer; background:linear-gradient(135deg,#3a2f12,#1f1a0d); color:#ffe6a8;
+    box-shadow:inset 0 0 0 1px #8a6a1f; }
+  .linkbtn { border:1px solid #2f3a48; background:#1a212b; color:var(--fg); border-radius:14px; padding:12px;
+    font:inherit; font-size:15px; cursor:pointer; text-align:center; }
   #updBanner { display:none; border:none; border-radius:16px; padding:14px 16px; font:inherit; font-size:15px;
     text-align:left; cursor:pointer; background:linear-gradient(135deg,#1f3d2e,#14251d); color:#c8f5dc;
     box-shadow:inset 0 0 0 1px #2f7a55; }
@@ -94,9 +99,11 @@
  <section id="tab-controls">
   <header>
     <h1 id="hello">Home</h1>
-    <p>Tap a tile to switch it</p>
+    <p id="sub">Tap a tile to switch it</p>
   </header>
 
+  <button class="mode" id="localBtn">🏠 <b>Internet route isn't answering.</b> Tap to switch to local mode (works on home Wi-Fi without internet)</button>
+  <button class="mode" id="netBtn" style="background:linear-gradient(135deg,#14283a,#0d1a26);color:#cfe6ff;box-shadow:inset 0 0 0 1px #2f5f8a">🌐 Back to internet mode</button>
   <button id="updBanner">✨ <b>Update available</b>. Tap to update now</button>
 
   <div class="status">
@@ -107,7 +114,7 @@
   <div class="grid">
     <button class="tile" data-t="curtain"><div class="ic">🪟</div><div class="nm">Curtain light</div><div class="st">…</div></button>
     <button class="tile" data-t="food"><div class="ic">🍽️</div><div class="nm">Food table</div><div class="st">…</div></button>
-    <button class="tile" data-t="server"><div class="ic">🖥️</div><div class="nm">Server room</div><div class="st">…</div></button>
+    <button class="tile" data-t="mens"><div class="ic">🛋️</div><div class="nm">Men's sitting room</div><div class="st">…</div></button>
     <button class="tile" id="refresh" style="justify-content:center;align-items:center;text-align:center">
       <div class="ic" style="filter:none">🔄</div><div class="st" style="margin:0">Refresh</div></button>
     <button id="goodnight"><span>🌙</span> Goodnight</button>
@@ -149,6 +156,11 @@
     </ol>
   </div>
   <div class="upd">
+    <div class="row"><span>Connection</span><b id="modeNow">…</b></div>
+    <button class="linkbtn" id="modeSwitch">…</button>
+    <div class="hint" id="modeHint"></div>
+  </div>
+  <div class="upd">
     <div class="row"><span>Version</span><b id="verNow">…</b></div>
     <button id="updBtn">🔄 Check for updates</button>
     <div id="updMsg"></div>
@@ -162,7 +174,10 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.10.18-1";
+const APP_VERSION = "2026.10.20-1";
+const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
+const LAN_URL = "http://192.168.1.157:8765/";
+const NET_URL = "https://talaquf.github.io/home-buttons/";
 const NTFY = "https://ntfy.sh";
 const hp = new URLSearchParams(location.hash.slice(1));
 if (hp.get("c") && hp.get("s")) {
@@ -204,19 +219,51 @@ function render(m) {
   note.textContent = "Updated " + new Date(m.ts * 1000).toLocaleTimeString();
 }
 
+function offerLocal() { if (!LOCAL) $("#localBtn").style.display = "block"; }
+function goLocal() { location.href = `${LAN_URL}#c=${encodeURIComponent(CMD)}&s=${encodeURIComponent(STATE)}`; }
+
 async function send(cmd, el) {
   if (el) el.classList.add("busy");
   note.textContent = "Sending…";
   clearTimeout(timer);
   timer = setTimeout(() => { document.querySelectorAll(".busy").forEach(e => e.classList.remove("busy"));
-    note.textContent = "⚠️ No answer from home. Is the relay running?"; }, 12000);
+    note.textContent = LOCAL ? "⚠️ No answer from the NAS. Are you on home Wi-Fi?" : "⚠️ No answer from home.";
+    offerLocal(); }, LOCAL ? 9000 : 12000);
+  if (LOCAL) {
+    try {
+      const ctl = new AbortController(); setTimeout(() => ctl.abort(), 8000);
+      const r = await fetch("api/cmd", { method: "POST", body: cmd, headers: { "X-Home-Key": CMD }, signal: ctl.signal });
+      if (r.status === 403) { clearTimeout(timer); note.textContent = "⚠️ Key not accepted. Reopen your setup link."; return; }
+      if (!r.ok) throw new Error(r.status);
+      render(await r.json());
+    } catch (e) {
+      clearTimeout(timer); document.querySelectorAll(".busy").forEach(x => x.classList.remove("busy"));
+      note.textContent = "⚠️ Can't reach the NAS. Are you on home Wi-Fi?";
+    }
+    return;
+  }
   try { await fetch(`${NTFY}/${CMD}`, { method: "POST", body: cmd }); }
-  catch (e) { note.textContent = "⚠️ No internet connection"; }
+  catch (e) { note.textContent = "⚠️ No internet connection"; offerLocal(); }
 }
 
-const es = new EventSource(`${NTFY}/${STATE}/sse`);
-es.onmessage = ev => { try { render(JSON.parse(JSON.parse(ev.data).message)); } catch (e) {} };
-es.onopen = () => send("status");
+if (LOCAL) {
+  $("#sub").textContent = "🏠 Local mode · works without internet";
+  $("#netBtn").style.display = "block";
+  send("status");
+} else {
+  const es = new EventSource(`${NTFY}/${STATE}/sse`);
+  es.onmessage = ev => { try { render(JSON.parse(JSON.parse(ev.data).message)); } catch (e) {} };
+  es.onopen = () => send("status");
+  es.onerror = () => { note.textContent = "⚠️ Internet route unavailable"; offerLocal(); };
+}
+$("#localBtn").onclick = goLocal;
+$("#netBtn").onclick = () => { location.href = NET_URL; };
+$("#modeNow").textContent = LOCAL ? "🏠 Local (home Wi-Fi)" : "🌐 Internet";
+$("#modeSwitch").textContent = LOCAL ? "🌐 Switch to internet mode" : "🏠 Open local mode";
+$("#modeSwitch").onclick = LOCAL ? () => { location.href = NET_URL; } : goLocal;
+$("#modeHint").textContent = LOCAL
+  ? "Local mode talks straight to the NAS, so it only works on your home Wi-Fi. Add this page to your home screen too, as a backup for when the internet is down."
+  : "Local mode skips the internet and talks straight to the NAS. Use it on home Wi-Fi when the internet is down.";
 
 document.querySelectorAll(".tile[data-t]").forEach(t => t.onclick = () => send(t.dataset.t + "_toggle", t));
 $("#refresh").onclick = () => send("status", $("#refresh"));

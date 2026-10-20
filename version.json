@@ -1,4 +1,4 @@
 {
-  "version": "2026.10.18-1",
-  "notes": "Curtain tile now controls the upstairs curtain light; new Check for updates button"
+  "version": "2026.10.20-1",
+  "notes": "Men's sitting room tile (all lights on/off) replaces Server room; local mode; app opens offline"
 }
