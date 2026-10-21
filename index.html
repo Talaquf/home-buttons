@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0f14">
+<script>
+  if (localStorage.getItem("home.theme") === "light") {
+    document.documentElement.classList.add("light");
+    document.querySelector('meta[name="theme-color"]').content = "#dce8fb";
+  }
+</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Home</title>
@@ -109,15 +115,49 @@
     box-shadow:inset 0 0 0 1px #8a6a1f; }
   .linkbtn { border:1px solid #2f3a48; background:#1a212b; color:var(--fg); border-radius:14px; padding:12px;
     font:inherit; font-size:15px; cursor:pointer; text-align:center; }
+  #netBtn { background:linear-gradient(135deg,#14283a,#0d1a26); color:#cfe6ff; box-shadow:inset 0 0 0 1px #2f5f8a; }
+  .seg { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .seg button { border:1px solid #2f3a48; background:#1a212b; color:var(--fg); border-radius:14px; padding:12px;
+    font:inherit; font-size:15px; font-weight:650; cursor:pointer; }
+  .seg button.sel { border-color:var(--on); box-shadow:inset 0 0 0 1px var(--on); }
   #updBanner { display:none; border:none; border-radius:16px; padding:14px 16px; font:inherit; font-size:15px;
     text-align:left; cursor:pointer; background:linear-gradient(135deg,#1f3d2e,#14251d); color:#c8f5dc;
     box-shadow:inset 0 0 0 1px #2f7a55; }
+
+  /* ---------- Light mode ---------- */
+  html.light { --bg:#eef2f8; --card:#ffffff; --line:#e1e6ee; --fg:#1c1f24; --muted:#6b7280;
+    --on:#e0a020; --night:#4b56d8; --ok:#1f9d55; --bad:#d93025; }
+  html.light body { background:linear-gradient(180deg,#dce8fb 0%,#e9eff9 40%,#f2f4f7 100%) fixed; }
+  html.light .chip, html.light .tile, html.light .pill, html.light .upd, html.light .app, html.light .steps {
+    box-shadow:0 2px 10px rgba(30,50,90,.06); }
+  html.light .tile .ic { background:#eef1f5; filter:grayscale(1) brightness(1.05); }
+  html.light .tile.on { border-color:#f0d27a; background:linear-gradient(160deg,#fff4d6,#ffffff 70%); }
+  html.light .tile.on .ic { box-shadow:0 0 22px 2px #ffc94d88; }
+  html.light #goodnight { background:linear-gradient(135deg,#e3e6ff,#cfd5ff); color:#262b6b; box-shadow:inset 0 0 0 1px #b4bcff; }
+  html.light #banner { background:#eef0ff; border-color:#b4bcff; }
+  html.light #banner.bad { background:#fdecea; border-color:var(--bad); }
+  html.light .pill.warn b { color:#c76b00; }
+  html.light .gbtn { background:linear-gradient(160deg,#ffffff,#f3f6fb); border-color:#e1e6ee; color:#2b2f36;
+    box-shadow:0 4px 14px rgba(30,50,90,.10); backdrop-filter:none; -webkit-backdrop-filter:none; }
+  html.light .gbtn:active { background:#e9eef7; }
+  html.light .gbtn.now-open { background:linear-gradient(160deg,#fff1d6,#ffffff); border-color:#f5b041; }
+  html.light .gbtn.now-close { background:linear-gradient(160deg,#dcebff,#ffffff); border-color:#5aa0ff; }
+  html.light nav { background:#ffffffee; border-top-color:#e5e7eb; }
+  html.light nav button.active { background:#e6edfb; color:#1a2a9c; }
+  html.light .mode { background:linear-gradient(135deg,#fff4d6,#ffeab0); color:#5c4300; box-shadow:inset 0 0 0 1px #e8c46a; }
+  html.light #netBtn { background:linear-gradient(135deg,#e3f0ff,#d3e6ff); color:#123a66; box-shadow:inset 0 0 0 1px #9cc3ef; }
+  html.light #updBanner { background:linear-gradient(135deg,#e3f6ea,#d2f0de); color:#14532d; box-shadow:inset 0 0 0 1px #8fd3a8; }
+  html.light .done { background:#e8f7ee; color:#14532d; }
+  html.light .steps ol { color:#374151; }
+  html.light .key { background:#eef1f5; }
+  html.light #updBtn, html.light .linkbtn, html.light .seg button { background:#f3f6fb; border-color:#dfe5ee; }
+  html.light #updBtn:active { background:#e9eef7; }
 </style>
 </head>
 <body>
 <main>
   <button class="mode" id="localBtn">🏠 <b>Internet route isn't answering.</b> Tap to switch to local mode (works on home Wi-Fi without internet)</button>
-  <button class="mode" id="netBtn" style="background:linear-gradient(135deg,#14283a,#0d1a26);color:#cfe6ff;box-shadow:inset 0 0 0 1px #2f5f8a">🌐 Back to internet mode</button>
+  <button class="mode" id="netBtn">🌐 Back to internet mode</button>
   <button id="updBanner">✨ <b>Update available</b>. Tap to update now</button>
  <section id="tab-controls" hidden>
   <header>
@@ -172,6 +212,11 @@
     <div><b>Home</b><p>Lights, garage &amp; goodnight · works anywhere</p></div>
   </div>
 
+  <div class="upd">
+    <div class="row"><span>Appearance</span><b id="themeNow">…</b></div>
+    <div class="seg"><button data-theme="dark">🌙 Dark</button><button data-theme="light">☀️ Light</button></div>
+  </div>
+
   <div class="done" id="installed" hidden>✅ <b>You're using the installed app.</b> Nothing else to do.</div>
   <button id="installBtn" hidden>📲 Add to home screen</button>
 
@@ -213,7 +258,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.10.21-2";
+const APP_VERSION = "2026.10.21-4";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -232,7 +277,33 @@ if (!CMD || !STATE) {
 }
 const $ = s => document.querySelector(s), banner = $("#banner"),
   note = { set textContent(t) { document.querySelectorAll(".note").forEach(e => e.textContent = t); } };
-let timer = null, gPoll = null, gPolls = 0;
+let timer = null, gPoll = null, gPolls = 0, gState = null, gSince = null;
+
+// "under a minute" / "12 minutes" / "2 hours 5 min" / "3 days"
+function ago(sec) {
+  const m = Math.floor(sec / 60), h = Math.floor(m / 60), d = Math.floor(h / 24), pl = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+  if (m < 1) return "under a minute";
+  if (h < 1) return pl(m, "minute");
+  if (d < 1) return pl(h, "hour") + (m % 60 ? ` ${m % 60} min` : "");
+  return pl(d, "day");
+}
+function showSince() {
+  const g = gState, known = ["open", "closed", "opening", "closing"].includes(g);
+  $("#gSub").textContent = !known ? "Door status unavailable"
+    : g === "opening" || g === "closing" ? `Door ${g}…`
+    : gSince ? `${g[0].toUpperCase() + g.slice(1)} for ${ago(Date.now() / 1000 - gSince)}` : `Door ${g}`;
+}
+setInterval(showSince, 30000);  // counts up on the phone; costs no messages
+
+function setTheme(t) {
+  document.documentElement.classList.toggle("light", t === "light");
+  localStorage.setItem("home.theme", t);
+  document.querySelector('meta[name="theme-color"]').content = t === "light" ? "#dce8fb" : "#0b0f14";
+  $("#themeNow").textContent = t === "light" ? "☀️ Light" : "🌙 Dark";
+  document.querySelectorAll("[data-theme]").forEach(b => b.classList.toggle("sel", b.dataset.theme === t));
+}
+document.querySelectorAll("[data-theme]").forEach(b => b.onclick = () => setTheme(b.dataset.theme));
+setTheme(localStorage.getItem("home.theme") === "light" ? "light" : "dark");
 
 const h = new Date().getHours();
 $("#hello").textContent = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
@@ -255,12 +326,15 @@ function render(m) {
   pill("#pDoor", !known ? "bad" : g === "closed" ? "ok" : "warn", G);
   pill("#pSafe", m.garage_obstruction ? "bad" : "ok", m.garage_obstruction ? "Obstructed" : "Clear");
   pill("#pCar", "", m.garage_car ? "Car in" : "Empty");
-  $("#gSub").textContent = moving ? `Door ${g}…` : known ? `Door ${g}` : "Door status unavailable";
+  // convert the NAS time to phone time, so a wrong phone clock doesn't skew "for X minutes"
+  gState = g; gSince = m.garage_since ? Date.now() / 1000 - (m.ts - m.garage_since) : null;
+  showSince();
   document.querySelector('.gbtn[data-g="open"]').classList.toggle("now-open", g === "opening" || g === "open");
   document.querySelector('.gbtn[data-g="close"]').classList.toggle("now-close", g === "closing");
-  // while the door moves (~18 s), ask again every 3 s until it settles (max ~45 s)
+  // local mode: while the door moves (~18 s), ask again every 3 s until it settles (max ~45 s).
+  // Internet mode doesn't poll (each ask costs ntfy messages); the relay sends one update when it settles.
   clearTimeout(gPoll);
-  if (moving && gPolls < 15) { gPolls++; gPoll = setTimeout(() => send("status"), 3000); } else if (!moving) gPolls = 0;
+  if (LOCAL && moving && gPolls < 15) { gPolls++; gPoll = setTimeout(() => send("status"), 3000); } else if (!moving) gPolls = 0;
   if (m.event === "goodnight") {
     banner.style.display = "block";
     banner.className = locked ? "" : "bad";

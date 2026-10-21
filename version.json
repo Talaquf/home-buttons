@@ -1,4 +1,4 @@
 {
-  "version": "2026.10.21-2",
-  "notes": "New garage app icon (re-add the home-screen shortcut to see it)"
+  "version": "2026.10.21-4",
+  "notes": "Light and dark mode (App tab); garage shows Open/Closed for X minutes; far fewer internet messages"
 }
