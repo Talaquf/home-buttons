@@ -58,11 +58,11 @@
     background:#161b3a; border:1px solid #3c4290; }
   #banner.bad { background:#3a1616; border-color:var(--bad); }
   /* Garage page: buttons styled like the HA (Frosted Glass) button cards */
-  .pills { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .pills { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
   .pill { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:10px 4px;
     display:flex; flex-direction:column; align-items:center; gap:2px; text-align:center; min-width:0; }
-  .pill small { color:var(--muted); font-size:12px; }
-  .pill b { font-size:14px; }
+  .pill small { color:var(--muted); font-size:13px; }
+  .pill b { font-size:18px; }
   .pill.ok b { color:var(--ok); } .pill.warn b { color:#ff9f0a; } .pill.bad { border-color:var(--bad); } .pill.bad b { color:var(--bad); }
   .gbtns { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
   .gbtn { min-height:112px; border-radius:22px; border:1px solid rgba(255,255,255,.09); cursor:pointer;
@@ -89,6 +89,12 @@
     font-size:13px; padding:8px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column;
     align-items:center; gap:2px; }
   nav button span { font-size:22px; }
+  nav .gico { display:flex; height:1.2em; align-items:center; }
+  nav .gico svg { width:28px; height:28px; fill:var(--on); }
+  main { min-height:100dvh; }
+  #tab-garage:not([hidden]) { flex:1; }
+  #gSub { margin:0; text-align:center; color:var(--muted); font-size:18px; }
+  #gNote { margin-top:auto; }
   nav button.active { color:var(--fg); background:var(--card); }
   .app { display:flex; align-items:center; gap:16px; background:var(--card); border:1px solid var(--line);
     border-radius:20px; padding:16px; }
@@ -144,6 +150,7 @@
   html.light .gbtn.now-close { background:linear-gradient(160deg,#dcebff,#ffffff); border-color:#5aa0ff; }
   html.light nav { background:#ffffffee; border-top-color:#e5e7eb; }
   html.light nav button.active { background:#e6edfb; color:#1a2a9c; }
+  html.light nav .gico svg { fill:#d99a00; }
   html.light .mode { background:linear-gradient(135deg,#fff4d6,#ffeab0); color:#5c4300; box-shadow:inset 0 0 0 1px #e8c46a; }
   html.light #netBtn { background:linear-gradient(135deg,#e3f0ff,#d3e6ff); color:#123a66; box-shadow:inset 0 0 0 1px #9cc3ef; }
   html.light #updBanner { background:linear-gradient(135deg,#e3f6ea,#d2f0de); color:#14532d; box-shadow:inset 0 0 0 1px #8fd3a8; }
@@ -187,11 +194,9 @@
  <section id="tab-garage">
   <header>
     <h1>Garage</h1>
-    <p id="gSub">…</p>
   </header>
   <div class="pills">
     <div class="pill" id="pDoor"><small>Door</small><b>…</b></div>
-    <div class="pill" id="pSafe"><small>Safety</small><b>…</b></div>
     <div class="pill" id="pCar"><small>Parking</small><b>…</b></div>
   </div>
   <div class="gbtns">
@@ -199,6 +204,7 @@
     <button class="gbtn" data-g="stop"><svg viewBox="0 0 24 24"><path d="M18,18H6V6H18V18Z"/></svg><span>Stop</span></button>
     <button class="gbtn" data-g="close"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z"/></svg><span>Close</span></button>
   </div>
+  <p id="gSub">…</p>
   <div id="gNote" class="note"></div>
  </section>
 
@@ -253,12 +259,12 @@
 </main>
 
 <nav>
-  <button class="active" data-tab="garage"><span>🚗</span>Garage</button>
+  <button class="active" data-tab="garage"><span class="gico"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z"/></svg></span>Garage</button>
   <button data-tab="controls"><span>💡</span>Controls</button>
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.10.21-4";
+const APP_VERSION = "2026.10.21-5";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -324,7 +330,6 @@ function render(m) {
   const known = ["open", "closed", "opening", "closing"].includes(g), G = known ? g[0].toUpperCase() + g.slice(1) : "Unavailable";
   const pill = (id, cls, txt) => { const e = $(id); e.className = "pill " + cls; e.querySelector("b").textContent = txt; };
   pill("#pDoor", !known ? "bad" : g === "closed" ? "ok" : "warn", G);
-  pill("#pSafe", m.garage_obstruction ? "bad" : "ok", m.garage_obstruction ? "Obstructed" : "Clear");
   pill("#pCar", "", m.garage_car ? "Car in" : "Empty");
   // convert the NAS time to phone time, so a wrong phone clock doesn't skew "for X minutes"
   gState = g; gSince = m.garage_since ? Date.now() / 1000 - (m.ts - m.garage_since) : null;
