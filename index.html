@@ -27,6 +27,8 @@
   main { max-width:460px; margin:0 auto; padding:max(20px, env(safe-area-inset-top)) 18px 28px;
     display:flex; flex-direction:column; gap:18px; }
   header h1 { margin:0; font-size:26px; }
+  .brand { text-align:center; font-size:20px; font-weight:700; letter-spacing:.3px; color:var(--on);
+    padding-bottom:12px; border-bottom:1px solid var(--line); }
   header p { margin:4px 0 0; color:var(--muted); font-size:14px; }
   .status { display:flex; gap:10px; }
   .chip { flex:1; background:var(--card); border:1px solid var(--line); border-radius:14px;
@@ -61,7 +63,7 @@
   .pills { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
   .pill { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:10px 4px;
     display:flex; flex-direction:column; align-items:center; gap:2px; text-align:center; min-width:0; }
-  .pill small { color:var(--muted); font-size:13px; }
+  .pill small { color:var(--muted); font-size:16px; }
   .pill b { font-size:18px; }
   .pill.ok b { color:var(--ok); } .pill.warn b { color:#ff9f0a; } .pill.bad { border-color:var(--bad); } .pill.bad b { color:var(--bad); }
   .gbtns { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
@@ -93,6 +95,7 @@
   nav .gico svg { width:28px; height:28px; fill:var(--on); }
   main { min-height:100dvh; }
   #tab-garage:not([hidden]) { flex:1; }
+  #tab-garage header { text-align:center; }
   #gSub { margin:0; text-align:center; color:var(--muted); font-size:18px; }
   #gNote { margin-top:auto; }
   nav button.active { color:var(--fg); background:var(--card); }
@@ -151,6 +154,7 @@
   html.light nav { background:#ffffffee; border-top-color:#e5e7eb; }
   html.light nav button.active { background:#e6edfb; color:#1a2a9c; }
   html.light nav .gico svg { fill:#d99a00; }
+  html.light .brand { color:#b37f00; border-bottom-color:#e1e6ee; }
   html.light .mode { background:linear-gradient(135deg,#fff4d6,#ffeab0); color:#5c4300; box-shadow:inset 0 0 0 1px #e8c46a; }
   html.light #netBtn { background:linear-gradient(135deg,#e3f0ff,#d3e6ff); color:#123a66; box-shadow:inset 0 0 0 1px #9cc3ef; }
   html.light #updBanner { background:linear-gradient(135deg,#e3f6ea,#d2f0de); color:#14532d; box-shadow:inset 0 0 0 1px #8fd3a8; }
@@ -163,6 +167,7 @@
 </head>
 <body>
 <main>
+  <div class="brand">Mohsenovic Home</div>
   <button class="mode" id="localBtn">🏠 <b>Internet route isn't answering.</b> Tap to switch to local mode (works on home Wi-Fi without internet)</button>
   <button class="mode" id="netBtn">🌐 Back to internet mode</button>
   <button id="updBanner">✨ <b>Update available</b>. Tap to update now</button>
@@ -193,7 +198,7 @@
 
  <section id="tab-garage">
   <header>
-    <h1>Garage</h1>
+    <h1>Garage door</h1>
   </header>
   <div class="pills">
     <div class="pill" id="pDoor"><small>Door</small><b>…</b></div>
@@ -215,7 +220,7 @@
   </header>
   <div class="app">
     <img src="icon-192.png" alt="">
-    <div><b>Home</b><p>Lights, garage &amp; goodnight · works anywhere</p></div>
+    <div><b>Home</b><p>Lights, garage door &amp; goodnight · works anywhere</p></div>
   </div>
 
   <div class="upd">
@@ -259,12 +264,12 @@
 </main>
 
 <nav>
-  <button class="active" data-tab="garage"><span class="gico"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z"/></svg></span>Garage</button>
+  <button class="active" data-tab="garage"><span class="gico"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z"/></svg></span>Garage door</button>
   <button data-tab="controls"><span>💡</span>Controls</button>
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.10.21-5";
+const APP_VERSION = "2026.10.22-1";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -348,7 +353,7 @@ function render(m) {
       : `⚠️ <b>Lights ${m.lights_on ? "sent off" : "are off"}, but the front door is ${m.door}.</b> Lock it before you sleep.`;
     if (m.garage && m.garage !== "closed") {
       banner.className = "bad";
-      banner.innerHTML += ` <br>🚗 <b>The garage is ${m.garage}.</b>`;
+      banner.innerHTML += ` <br>🚗 <b>The garage door is ${m.garage}.</b>`;
     }
   }
   note.textContent = "Updated " + new Date(m.ts * 1000).toLocaleTimeString();
