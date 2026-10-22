@@ -198,7 +198,7 @@
 
  <section id="tab-garage">
   <header>
-    <h1>Garage door</h1>
+    <h1>Garage Door</h1>
   </header>
   <div class="pills">
     <div class="pill" id="pDoor"><small>Door</small><b>…</b></div>
@@ -264,12 +264,12 @@
 </main>
 
 <nav>
-  <button class="active" data-tab="garage"><span class="gico"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z"/></svg></span>Garage door</button>
+  <button class="active" data-tab="garage"><span class="gico"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z"/></svg></span>Garage Door</button>
   <button data-tab="controls"><span>💡</span>Controls</button>
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.10.22-1";
+const APP_VERSION = "2026.10.22-2";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -406,10 +406,8 @@ $("#modeHint").textContent = LOCAL
   : "Local mode skips the internet and talks straight to the NAS. Use it on home Wi-Fi when the internet is down.";
 
 document.querySelectorAll(".tile[data-t]").forEach(t => t.onclick = () => send(t.dataset.t + "_toggle", t));
-const G_ASK = { open: "Open the garage door?", close: "Close the garage door?\nMake sure nothing is in the way." };
 document.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
   const a = b.dataset.g;
-  if (G_ASK[a] && !confirm(G_ASK[a])) return;
   gPolls = 0; send("garage_" + a, b);
 });
 $("#refresh").onclick = () => send("status", $("#refresh"));
