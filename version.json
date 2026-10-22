@@ -1,4 +1,4 @@
 {
-  "version": "2026.10.22-2",
-  "notes": "Open and Close act immediately (no confirmation); Garage Door title"
+  "version": "2026.10.22-3",
+  "notes": "Uses fewer internet messages when the app opens; Controls tab hidden by default (App tab → Show)"
 }

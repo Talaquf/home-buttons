@@ -83,6 +83,7 @@
   @keyframes pulse { 50% { opacity:.55; } }
   main { padding-bottom:96px; }
   section[hidden] { display:none !important; }
+  nav button[hidden] { display:none !important; }
   section { display:flex; flex-direction:column; gap:18px; }
   nav { position:fixed; left:0; right:0; bottom:0; display:flex; justify-content:center; gap:8px;
     padding:10px 16px max(12px, env(safe-area-inset-bottom)); background:#0b0f14ee;
@@ -226,6 +227,8 @@
   <div class="upd">
     <div class="row"><span>Appearance</span><b id="themeNow">…</b></div>
     <div class="seg"><button data-theme="dark">🌙 Dark</button><button data-theme="light">☀️ Light</button></div>
+    <div class="row" style="margin-top:14px"><span>Controls tab</span><b id="ctlNow">…</b></div>
+    <div class="seg"><button data-ctl="show">💡 Show</button><button data-ctl="hide">🚫 Hide</button></div>
   </div>
 
   <div class="done" id="installed" hidden>✅ <b>You're using the installed app.</b> Nothing else to do.</div>
@@ -269,7 +272,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.10.22-2";
+const APP_VERSION = "2026.10.22-3";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -315,6 +318,15 @@ function setTheme(t) {
 }
 document.querySelectorAll("[data-theme]").forEach(b => b.onclick = () => setTheme(b.dataset.theme));
 setTheme(localStorage.getItem("home.theme") === "light" ? "light" : "dark");
+
+function setControls(v) {  // hides the lights/Goodnight tab on this phone only; saved like the theme
+  localStorage.setItem("home.controls", v);
+  $('nav button[data-tab="controls"]').hidden = v === "hide";
+  $("#ctlNow").textContent = v === "hide" ? "🚫 Hidden" : "💡 Shown";
+  document.querySelectorAll("[data-ctl]").forEach(b => b.classList.toggle("sel", b.dataset.ctl === v));
+}
+document.querySelectorAll("[data-ctl]").forEach(b => b.onclick = () => setControls(b.dataset.ctl));
+setControls(localStorage.getItem("home.controls") === "show" ? "show" : "hide");  // hidden unless turned on
 
 const h = new Date().getHours();
 $("#hello").textContent = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
@@ -386,14 +398,27 @@ async function send(cmd, el) {
   catch (e) { note.textContent = "⚠️ No internet connection"; offerLocal(); }
 }
 
+// Automatic status requests cost 2 ntfy messages each in internet mode (free quota ≈250/day),
+// so skip one when a state just arrived or a request on an open connection is still pending.
+let es = null, lastMsg = 0, lastAuto = 0;
+function autoStatus(fresh) {  // fresh: the connection just (re)opened
+  if (!LOCAL) {
+    const now = Date.now();
+    if (now - lastMsg < 10000 || (!fresh && now - lastAuto < 5000)) return;
+    if (!es || es.readyState !== EventSource.OPEN) return;  // onopen asks once the connection is up
+    lastAuto = now;
+  }
+  send("status");
+}
+
 if (LOCAL) {
   $("#sub").textContent = "🏠 Local mode · works without internet";
   $("#netBtn").style.display = "block";
   send("status");
 } else {
-  const es = new EventSource(`${NTFY}/${STATE}/sse`);
-  es.onmessage = ev => { try { render(JSON.parse(JSON.parse(ev.data).message)); } catch (e) {} };
-  es.onopen = () => send("status");
+  es = new EventSource(`${NTFY}/${STATE}/sse`);
+  es.onmessage = ev => { lastMsg = Date.now(); try { render(JSON.parse(JSON.parse(ev.data).message)); } catch (e) {} };
+  es.onopen = () => autoStatus(true);
   es.onerror = () => { note.textContent = "⚠️ Internet route unavailable"; offerLocal(); };
 }
 $("#localBtn").onclick = goLocal;
@@ -414,7 +439,7 @@ $("#refresh").onclick = () => send("status", $("#refresh"));
 $("#goodnight").onclick = () => {
   if (confirm("Turn off all the lights in the house?")) { banner.style.display = "none"; send("goodnight", $("#goodnight")); }
 };
-document.addEventListener("visibilitychange", () => { if (!document.hidden) { send("status"); checkUpdates(false); } });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { autoStatus(); checkUpdates(false); } });
 
 // Tabs
 function showTab(name) {
