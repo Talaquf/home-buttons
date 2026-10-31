@@ -99,6 +99,15 @@
   #tab-garage header { text-align:center; }
   #gSub { margin:0; text-align:center; color:var(--muted); font-size:18px; }
   #gNote { margin-top:auto; }
+  /* Garage › See more: water valve (close only) */
+  .morebtn { align-self:center; background:none; border:1px solid var(--line); border-radius:999px; color:var(--muted);
+    font:inherit; font-size:16px; padding:8px 18px; cursor:pointer; }
+  #more:not([hidden]) { display:flex; flex-direction:column; gap:12px; }
+  #more h2 { margin:0; font-size:20px; text-align:center; }
+  .gbtn.wide { min-height:84px; flex-direction:row; gap:12px; }
+  .gbtn.wide svg { width:34px; height:34px; }
+  .gbtn.attn { background:linear-gradient(160deg,rgba(255,159,10,.30),rgba(60,50,30,.25)); border-color:rgba(255,159,10,.45); }
+  #vNote { margin:0; text-align:center; color:var(--muted); font-size:14px; }
   nav button.active { color:var(--fg); background:var(--card); }
   .app { display:flex; align-items:center; gap:16px; background:var(--card); border:1px solid var(--line);
     border-radius:20px; padding:16px; }
@@ -151,6 +160,8 @@
     box-shadow:0 4px 14px rgba(30,50,90,.10); backdrop-filter:none; -webkit-backdrop-filter:none; }
   html.light .gbtn:active { background:#e9eef7; }
   html.light .gbtn.now-open { background:linear-gradient(160deg,#fff1d6,#ffffff); border-color:#f5b041; }
+  html.light .gbtn.attn { background:linear-gradient(160deg,#fff1d6,#ffffff); border-color:#f5b041; }
+  html.light .morebtn { background:#ffffff; border-color:#dfe5ee; }
   html.light .gbtn.now-close { background:linear-gradient(160deg,#dcebff,#ffffff); border-color:#5aa0ff; }
   html.light nav { background:#ffffffee; border-top-color:#e5e7eb; }
   html.light nav button.active { background:#e6edfb; color:#1a2a9c; }
@@ -211,6 +222,16 @@
     <button class="gbtn" data-g="close"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z"/></svg><span>Close</span></button>
   </div>
   <p id="gSub">…</p>
+  <button class="morebtn" id="moreBtn">See more ▾</button>
+  <div id="more" hidden>
+    <h2>Water valve</h2>
+    <div class="pills">
+      <div class="pill" id="pValve"><small>Valve</small><b>…</b></div>
+      <div class="pill" id="pFlow"><small>Flow</small><b>…</b></div>
+    </div>
+    <button class="gbtn wide" id="valveClose"><svg viewBox="0 0 24 24"><path d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20Z"/></svg><span>Close valve</span></button>
+    <p id="vNote">Close only. The 04:30 schedule opens it.</p>
+  </div>
   <div id="gNote" class="note"></div>
  </section>
 
@@ -272,7 +293,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.10.22-3";
+const APP_VERSION = "2026.10.31-1";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -351,6 +372,18 @@ function render(m) {
   // convert the NAS time to phone time, so a wrong phone clock doesn't skew "for X minutes"
   gState = g; gSince = m.garage_since ? Date.now() / 1000 - (m.ts - m.garage_since) : null;
   showSince();
+  // Water valve: "Closed" only when the switch is off AND the flow is exactly 0 (same rule as the HA automation)
+  const vs = m.valve, fl = parseFloat(m.valve_flow), flowOk = Number.isFinite(fl);
+  const lpm = flowOk ? Math.round(fl * 1000 / 60 * 10) / 10 : null;  // m³/h → L/min
+  const vClosed = vs === "off" && lpm === 0, vOpen = vs === "on" || (flowOk && lpm > 0);
+  if (vs !== undefined) {
+    pill("#pValve", vClosed ? "ok" : vOpen ? "warn" : "bad",
+      vClosed ? "Closed" : vs === "on" ? "Open" : vs === "off" ? "Off, flowing" : "Unavailable");
+    pill("#pFlow", !flowOk ? "bad" : lpm > 0 ? "warn" : "ok", flowOk ? `${lpm} L/min` : "Unavailable");
+    $("#valveClose").classList.toggle("attn", vOpen);
+    $("#vNote").textContent = vOpen ? "⚠️ Water is running. Tap Close valve."
+      : !vClosed ? "⚠️ Valve status unavailable. Close is still sent if tapped." : "Close only. The 04:30 schedule opens it.";
+  }
   document.querySelector('.gbtn[data-g="open"]').classList.toggle("now-open", g === "opening" || g === "open");
   document.querySelector('.gbtn[data-g="close"]').classList.toggle("now-close", g === "closing");
   // local mode: while the door moves (~18 s), ask again every 3 s until it settles (max ~45 s).
@@ -435,6 +468,16 @@ document.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
   const a = b.dataset.g;
   gPolls = 0; send("garage_" + a, b);
 });
+$("#valveClose").onclick = () => {
+  send("valve_close", $("#valveClose"));
+  if (LOCAL) setTimeout(() => send("status"), 15000);  // local mode gets no pushed update if the close was slow
+};
+function setMore(open) {  // Garage › See more; remembered on this phone
+  localStorage.setItem("home.more", open ? "1" : "0");
+  $("#more").hidden = !open; $("#moreBtn").textContent = open ? "See less ▴" : "See more ▾";
+}
+$("#moreBtn").onclick = () => setMore($("#more").hidden);
+setMore(localStorage.getItem("home.more") === "1");
 $("#refresh").onclick = () => send("status", $("#refresh"));
 $("#goodnight").onclick = () => {
   if (confirm("Turn off all the lights in the house?")) { banner.style.display = "none"; send("goodnight", $("#goodnight")); }
