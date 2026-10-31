@@ -1,4 +1,4 @@
 {
-  "version": "2026.10.31-1",
-  "notes": "Water valve status and a Close button under Garage Door › See more"
+  "version": "2026.10.31-2",
+  "notes": "Water valve shows Closed reliably after a slow close, without extra internet messages"
 }

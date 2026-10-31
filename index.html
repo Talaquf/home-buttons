@@ -293,7 +293,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.10.31-1";
+const APP_VERSION = "2026.10.31-2";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -312,6 +312,7 @@ if (!CMD || !STATE) {
 }
 const $ = s => document.querySelector(s), banner = $("#banner"),
   note = { set textContent(t) { document.querySelectorAll(".note").forEach(e => e.textContent = t); } };
+let vClosed = null, vChecks = [];
 let timer = null, gPoll = null, gPolls = 0, gState = null, gSince = null;
 
 // "under a minute" / "12 minutes" / "2 hours 5 min" / "3 days"
@@ -375,7 +376,7 @@ function render(m) {
   // Water valve: "Closed" only when the switch is off AND the flow is exactly 0 (same rule as the HA automation)
   const vs = m.valve, fl = parseFloat(m.valve_flow), flowOk = Number.isFinite(fl);
   const lpm = flowOk ? Math.round(fl * 1000 / 60 * 10) / 10 : null;  // m³/h → L/min
-  const vClosed = vs === "off" && lpm === 0, vOpen = vs === "on" || (flowOk && lpm > 0);
+  vClosed = vs === "off" && lpm === 0; const vOpen = vs === "on" || (flowOk && lpm > 0);
   if (vs !== undefined) {
     pill("#pValve", vClosed ? "ok" : vOpen ? "warn" : "bad",
       vClosed ? "Closed" : vs === "on" ? "Open" : vs === "off" ? "Off, flowing" : "Unavailable");
@@ -468,9 +469,15 @@ document.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
   const a = b.dataset.g;
   gPolls = 0; send("garage_" + a, b);
 });
+// The valve reports a close 40-70 s late. Local mode re-reads GET api/status (never published to ntfy, so free)
+// at 15/45/90 s until it shows closed. Internet mode sends nothing extra: the relay publishes once when closed.
+async function localPeek() {
+  try { const r = await fetch("api/status", { headers: { "X-Home-Key": CMD } }); if (r.ok) render(await r.json()); } catch (e) {}
+}
 $("#valveClose").onclick = () => {
+  vChecks.forEach(clearTimeout);
   send("valve_close", $("#valveClose"));
-  if (LOCAL) setTimeout(() => send("status"), 15000);  // local mode gets no pushed update if the close was slow
+  if (LOCAL) vChecks = [15, 45, 90].map(s => setTimeout(() => { if (!vClosed) localPeek(); }, s * 1000));
 };
 function setMore(open) {  // Garage › See more; remembered on this phone
   localStorage.setItem("home.more", open ? "1" : "0");
