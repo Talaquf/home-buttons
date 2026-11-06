@@ -247,6 +247,8 @@
     <div class="seg"><button data-theme="dark">🌙 Dark</button><button data-theme="light">☀️ Light</button></div>
     <div class="row" style="margin-top:14px"><span>Controls tab</span><b id="ctlNow">…</b></div>
     <div class="seg"><button data-ctl="show">💡 Show</button><button data-ctl="hide">🚫 Hide</button></div>
+    <div class="row" style="margin-top:14px"><span>Vibration on tap</span><b id="hapNow">…</b></div>
+    <div class="seg"><button data-hap="on">📳 On</button><button data-hap="off">🔕 Off</button></div>
   </div>
 
   <div class="done" id="installed" hidden>✅ <b>You're using the installed app.</b> Nothing else to do.</div>
@@ -290,7 +292,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.10.31-3";
+const APP_VERSION = "2026.11.06-1";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -347,6 +349,27 @@ function setControls(v) {  // hides the lights/Goodnight tab on this phone only;
 document.querySelectorAll("[data-ctl]").forEach(b => b.onclick = () => setControls(b.dataset.ctl));
 setControls(localStorage.getItem("home.controls") === "show" ? "show" : "hide");  // hidden unless turned on
 
+// Haptics: a short buzz on every button tap (on by default, saved per phone). Android uses the Vibration API;
+// iPhone Safari has none, so it taps a hidden iOS 18 switch, which gives the system tick. Costs no messages.
+const iosTick = document.createElement("label");
+iosTick.innerHTML = '<input type="checkbox" switch>';
+iosTick.style.cssText = "position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden";
+document.body.append(iosTick);
+function buzz(ms) {
+  if (localStorage.getItem("home.haptics") === "off") return;
+  if (navigator.vibrate) navigator.vibrate(ms); else iosTick.click();
+}
+document.addEventListener("click", e => {  // capture phase: buzzes before the button's own handler (and confirm())
+  const b = e.target.closest("button"); if (b) buzz(b.matches(".gbtn, #goodnight") ? 25 : 12);
+}, true);
+function setHaptics(v) {
+  localStorage.setItem("home.haptics", v);
+  $("#hapNow").textContent = v === "off" ? "🔕 Off" : "📳 On";
+  document.querySelectorAll("[data-hap]").forEach(b => b.classList.toggle("sel", b.dataset.hap === v));
+}
+document.querySelectorAll("[data-hap]").forEach(b => b.onclick = () => setHaptics(b.dataset.hap));
+setHaptics(localStorage.getItem("home.haptics") === "off" ? "off" : "on");
+
 const h = new Date().getHours();
 $("#hello").textContent = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 
@@ -385,10 +408,10 @@ function render(m) {
   }
   document.querySelector('.gbtn[data-g="open"]').classList.toggle("now-open", g === "opening" || g === "open");
   document.querySelector('.gbtn[data-g="close"]').classList.toggle("now-close", g === "closing");
-  // local mode: while the door moves (~18 s), ask again every 3 s until it settles (max ~45 s).
+  // local mode: while the door moves (~18 s), re-read GET api/status (free, never published) every 3 s until it settles (max ~45 s).
   // Internet mode doesn't poll (each ask costs ntfy messages); the relay sends one update when it settles.
   clearTimeout(gPoll);
-  if (LOCAL && moving && gPolls < 15) { gPolls++; gPoll = setTimeout(() => send("status"), 3000); } else if (!moving) gPolls = 0;
+  if (LOCAL && moving && gPolls < 15) { gPolls++; gPoll = setTimeout(localPeek, 3000); } else if (!moving) gPolls = 0;
   if (m.event === "goodnight") {
     banner.style.display = "block";
     banner.className = locked ? "" : "bad";

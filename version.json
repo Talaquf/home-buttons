@@ -1,4 +1,4 @@
 {
-  "version": "2026.10.31-3",
-  "notes": "Water valve moved to the Controls tab and shows Closed when the valve is off (no more stale flow)"
+  "version": "2026.11.06-1",
+  "notes": "Every button vibrates when tapped (App › Vibration on tap to turn off); local mode no longer uses ntfy messages while the garage door moves"
 }
