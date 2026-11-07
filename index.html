@@ -292,7 +292,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.11.06-1";
+const APP_VERSION = "2026.11.07-1";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -360,7 +360,7 @@ function buzz(ms) {
   if (navigator.vibrate) navigator.vibrate(ms); else iosTick.click();
 }
 document.addEventListener("click", e => {  // capture phase: buzzes before the button's own handler (and confirm())
-  const b = e.target.closest("button"); if (b) buzz(b.matches(".gbtn, #goodnight") ? 25 : 12);
+  const b = e.target.closest("button"); if (b) buzz(b.matches(".gbtn, #goodnight") ? 50 : 30);
 }, true);
 function setHaptics(v) {
   localStorage.setItem("home.haptics", v);

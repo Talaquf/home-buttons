@@ -1,4 +1,4 @@
 {
-  "version": "2026.11.06-1",
-  "notes": "Every button vibrates when tapped (App › Vibration on tap to turn off); local mode no longer uses ntfy messages while the garage door moves"
+  "version": "2026.11.07-1",
+  "notes": "Stronger vibration on tap (garage door buttons, Close valve and Goodnight buzz the strongest)"
 }
