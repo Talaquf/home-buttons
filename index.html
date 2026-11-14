@@ -105,6 +105,14 @@
   .gbtn.wide { min-height:84px; flex-direction:row; gap:12px; }
   .gbtn.wide svg { width:34px; height:34px; }
   .gbtn.attn { background:linear-gradient(160deg,rgba(255,159,10,.30),rgba(60,50,30,.25)); border-color:rgba(255,159,10,.45); }
+  /* Front Door tab: lock / unlock (unlock asks first) + battery */
+  #tab-door:not([hidden]) { flex:1; }
+  #tab-door header { text-align:center; }
+  .gbtns.two { grid-template-columns:repeat(2,1fr); }
+  .gbtn.now-locked { background:linear-gradient(160deg,rgba(76,195,138,.28),rgba(30,60,45,.25)); border-color:rgba(76,195,138,.45); }
+  .gbtn.now-unlocked { background:linear-gradient(160deg,rgba(255,159,10,.30),rgba(60,50,30,.25)); border-color:rgba(255,159,10,.45); }
+  #dSub { margin:0; text-align:center; color:var(--muted); font-size:18px; }
+  #dNote { margin-top:auto; text-align:center; color:var(--muted); font-size:12px; min-height:1.2em; }
   #vNote { margin:0; text-align:center; color:var(--muted); font-size:14px; }
   nav button.active { color:var(--fg); background:var(--card); }
   .app { display:flex; align-items:center; gap:16px; background:var(--card); border:1px solid var(--line);
@@ -232,6 +240,22 @@
   <div id="gNote" class="note"></div>
  </section>
 
+ <section id="tab-door" hidden>
+  <header>
+    <h1>Front Door</h1>
+  </header>
+  <div class="pills">
+    <div class="pill" id="pLock"><small>Lock</small><b>…</b></div>
+    <div class="pill" id="pBatt"><small>Battery</small><b>…</b></div>
+  </div>
+  <div class="gbtns two">
+    <button class="gbtn" data-d="lock"><svg viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/></svg><span>Lock</span></button>
+    <button class="gbtn" data-d="unlock"><svg viewBox="0 0 24 24"><path d="M18,1C15.24,1 13,3.24 13,6V8H4A2,2 0 0,0 2,10V20A2,2 0 0,0 4,22H16A2,2 0 0,0 18,20V10A2,2 0 0,0 16,8H15V6A3,3 0 0,1 18,3A3,3 0 0,1 21,6V8H23V6C23,3.24 20.76,1 18,1M10,13A2,2 0 0,1 12,15A2,2 0 0,1 10,17A2,2 0 0,1 8,15A2,2 0 0,1 10,13Z"/></svg><span>Unlock</span></button>
+  </div>
+  <p id="dSub">…</p>
+  <div id="dNote" class="note"></div>
+ </section>
+
  <section id="tab-install" hidden>
   <header>
     <h1>App</h1>
@@ -239,7 +263,7 @@
   </header>
   <div class="app">
     <img src="icon-192.png" alt="">
-    <div><b>Home</b><p>Lights, garage door &amp; goodnight · works anywhere</p></div>
+    <div><b>Home</b><p>Garage door, front door, lights &amp; goodnight · works anywhere</p></div>
   </div>
 
   <div class="upd">
@@ -288,11 +312,12 @@
 
 <nav>
   <button class="active" data-tab="garage"><span class="gico"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z"/></svg></span>Garage Door</button>
+  <button data-tab="door"><span class="gico"><svg viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/></svg></span>Front Door</button>
   <button data-tab="controls"><span>💡</span>Controls</button>
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.11.07-1";
+const APP_VERSION = "2026.11.14-1";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -311,7 +336,7 @@ if (!CMD || !STATE) {
 }
 const $ = s => document.querySelector(s), banner = $("#banner"),
   note = { set textContent(t) { document.querySelectorAll(".note").forEach(e => e.textContent = t); } };
-let vClosed = null, vChecks = [];
+let vClosed = null, vChecks = [], dChecks = [], dState = null, dOpen = null;
 let timer = null, gPoll = null, gPolls = 0, gState = null, gSince = null;
 
 // "under a minute" / "12 minutes" / "2 hours 5 min" / "3 days"
@@ -405,6 +430,19 @@ function render(m) {
     $("#valveClose").classList.toggle("attn", vOpen);
     $("#vNote").textContent = vOpen ? "⚠️ Water is running. Tap Close valve."
       : !vClosed ? "⚠️ Valve status unavailable. Close is still sent if tapped." : "Close only. The 04:30 schedule opens it.";
+  }
+  // Front door (Bluetooth lock): Lock pill + battery %; door contact under the buttons
+  if (m.door_battery !== undefined) {
+    const d = m.door, D = { locked: "Locked", unlocked: "Unlocked", locking: "Locking…", unlocking: "Unlocking…", jammed: "Jammed" }[d];
+    dState = d; dOpen = m.door_open === "on";
+    pill("#pLock", d === "locked" ? "ok" : d === "unlocked" || d === "locking" || d === "unlocking" ? "warn" : "bad", D || "Unavailable");
+    const b = parseFloat(m.door_battery);
+    pill("#pBatt", !Number.isFinite(b) ? "bad" : b <= 20 ? "bad" : b <= 35 ? "warn" : "ok", Number.isFinite(b) ? `${Math.round(b)} %` : "Unavailable");
+    $("#dSub").textContent = m.door_open === "on" ? "Door is open" : m.door_open === "off" ? "Door closed" : "Door sensor unavailable";
+    document.querySelector('.gbtn[data-d="lock"]').classList.toggle("now-locked", d === "locked" || d === "locking");
+    document.querySelector('.gbtn[data-d="unlock"]').classList.toggle("now-unlocked", d === "unlocked" || d === "unlocking");
+    if (m.event === "door_open") $("#dSub").textContent = "⚠️ Door is open. Close it, then lock.";
+    else if (d === "jammed") $("#dSub").textContent = "⚠️ Lock jammed. Check the door.";
   }
   document.querySelector('.gbtn[data-g="open"]').classList.toggle("now-open", g === "opening" || g === "open");
   document.querySelector('.gbtn[data-g="close"]').classList.toggle("now-close", g === "closing");
@@ -500,6 +538,16 @@ $("#valveClose").onclick = () => {
   send("valve_close", $("#valveClose"));
   if (LOCAL) vChecks = [15, 45, 90].map(s => setTimeout(() => { if (!vClosed) localPeek(); }, s * 1000));
 };
+// Lock first tap; Unlock asks first. A slow Bluetooth answer: the relay publishes once when it settles;
+// local mode re-reads GET api/status (free) at 10 and 25 s instead.
+document.querySelectorAll("[data-d]").forEach(b => b.onclick = () => {
+  const a = b.dataset.d;
+  if (a === "lock" && dOpen) { $("#dSub").textContent = "⚠️ Door is open. Close it, then lock."; return; }
+  if (a === "unlock" && !confirm("Unlock the front door?")) return;
+  dChecks.forEach(clearTimeout);
+  send("door_" + a, b);
+  if (LOCAL) dChecks = [10, 25].map(s => setTimeout(() => { if (dState === "locking" || dState === "unlocking") localPeek(); }, s * 1000));
+});
 localStorage.removeItem("home.more");  // old Garage › See more setting (valve moved to Controls in 10.31-3)
 $("#refresh").onclick = () => send("status", $("#refresh"));
 $("#goodnight").onclick = () => {
