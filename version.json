@@ -1,4 +1,4 @@
 {
-  "version": "2026.11.14-1",
-  "notes": "New Front Door tab next to Garage Door: Lock / Unlock (asks before unlocking) and lock battery %"
+  "version": "2026.11.15-1",
+  "notes": "App tab: vibration strength 1–5 (default 3, stronger than before); tap a level to feel it"
 }

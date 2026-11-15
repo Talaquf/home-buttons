@@ -144,6 +144,8 @@
   .seg { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .seg button { border:1px solid #2f3a48; background:#1a212b; color:var(--fg); border-radius:14px; padding:12px;
     font:inherit; font-size:15px; font-weight:650; cursor:pointer; }
+  .seg5 { grid-template-columns:repeat(5,1fr); gap:6px; margin-top:8px; }
+  .seg5 button { padding:12px 0; }
   .seg button.sel { border-color:var(--on); box-shadow:inset 0 0 0 1px var(--on); }
   #updBanner { display:none; border:none; border-radius:16px; padding:14px 16px; font:inherit; font-size:15px;
     text-align:left; cursor:pointer; background:linear-gradient(135deg,#1f3d2e,#14251d); color:#c8f5dc;
@@ -273,6 +275,8 @@
     <div class="seg"><button data-ctl="show">💡 Show</button><button data-ctl="hide">🚫 Hide</button></div>
     <div class="row" style="margin-top:14px"><span>Vibration on tap</span><b id="hapNow">…</b></div>
     <div class="seg"><button data-hap="on">📳 On</button><button data-hap="off">🔕 Off</button></div>
+    <div class="row" style="margin-top:14px"><span>Vibration strength</span><b id="hlNow">…</b></div>
+    <div class="seg seg5" id="hlSeg"><button data-hl="1">1</button><button data-hl="2">2</button><button data-hl="3">3</button><button data-hl="4">4</button><button data-hl="5">5</button></div>
   </div>
 
   <div class="done" id="installed" hidden>✅ <b>You're using the installed app.</b> Nothing else to do.</div>
@@ -317,7 +321,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.11.14-1";
+const APP_VERSION = "2026.11.15-1";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -380,16 +384,29 @@ const iosTick = document.createElement("label");
 iosTick.innerHTML = '<input type="checkbox" switch>';
 iosTick.style.cssText = "position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden";
 document.body.append(iosTick);
-function buzz(ms) {
+// Strength = buzz length in ms [normal button, big button]. Level 1 = the old 30/50 ms; default 3.
+// Android can't set motor intensity from a web page, so a longer buzz is how it feels stronger (iPhone tick is fixed).
+const HAP_LEVELS = { 1: [30, 50], 2: [50, 80], 3: [75, 110], 4: [100, 150], 5: [140, 200] };
+const HAP_NAMES = { 1: "Light", 2: "Soft", 3: "Medium", 4: "Strong", 5: "Max" };
+const hapLevel = () => HAP_LEVELS[localStorage.getItem("home.hapLevel")] ? localStorage.getItem("home.hapLevel") : "3";
+function buzz(big) {
   if (localStorage.getItem("home.haptics") === "off") return;
-  if (navigator.vibrate) navigator.vibrate(ms); else iosTick.click();
+  if (navigator.vibrate) navigator.vibrate(HAP_LEVELS[hapLevel()][big ? 1 : 0]); else iosTick.click();
 }
 document.addEventListener("click", e => {  // capture phase: buzzes before the button's own handler (and confirm())
-  const b = e.target.closest("button"); if (b) buzz(b.matches(".gbtn, #goodnight") ? 50 : 30);
+  const b = e.target.closest("button"); if (b && !b.dataset.hl) buzz(b.matches(".gbtn, #goodnight"));
 }, true);
+function setHapLevel(v) {
+  localStorage.setItem("home.hapLevel", v);
+  $("#hlNow").textContent = `${v} · ${HAP_NAMES[v]}`;
+  document.querySelectorAll("[data-hl]").forEach(b => b.classList.toggle("sel", b.dataset.hl === v));
+}
+document.querySelectorAll("[data-hl]").forEach(b => b.onclick = () => { setHapLevel(b.dataset.hl); buzz(true); });  // preview
+setHapLevel(hapLevel());
 function setHaptics(v) {
   localStorage.setItem("home.haptics", v);
   $("#hapNow").textContent = v === "off" ? "🔕 Off" : "📳 On";
+  $("#hlSeg").style.opacity = v === "off" ? ".45" : "";
   document.querySelectorAll("[data-hap]").forEach(b => b.classList.toggle("sel", b.dataset.hap === v));
 }
 document.querySelectorAll("[data-hap]").forEach(b => b.onclick = () => setHaptics(b.dataset.hap));
