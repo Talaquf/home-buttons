@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0f14">
 <script>
+  // page height = the real visible height (some phones report 100dvh taller in the installed app → page scrolls, circles sit low)
+  { const fit = () => document.documentElement.style.setProperty("--app-h", innerHeight + "px");
+    fit(); addEventListener("resize", fit); }
   { const t = localStorage.getItem("home.theme");
     if (t === "light" || t === "clay") {
       document.documentElement.classList.add("light");
@@ -84,7 +87,7 @@
   nav button span { font-size:22px; }
   nav .gico { display:flex; height:1.2em; align-items:center; }
   nav .gico svg { width:28px; height:28px; fill:var(--on); }
-  main { min-height:100dvh; }
+  main { min-height:min(100dvh, var(--app-h, 100dvh)); }
   #tab-garage:not([hidden]) { flex:1; }
   #tab-garage header { text-align:center; }
   #gSub { margin:0; text-align:center; color:var(--muted); font-size:18px; }
@@ -298,7 +301,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.11.21-4";
+const APP_VERSION = "2026.11.21-5";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
