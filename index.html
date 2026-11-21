@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0f14">
 <script>
-  if (localStorage.getItem("home.theme") === "light") {
-    document.documentElement.classList.add("light");
-    document.querySelector('meta[name="theme-color"]').content = "#dce8fb";
-  }
+  { const t = localStorage.getItem("home.theme");
+    if (t === "light" || t === "clay") {
+      document.documentElement.classList.add("light");
+      if (t === "clay") document.documentElement.classList.add("clay");
+      document.querySelector('meta[name="theme-color"]').content = t === "clay" ? "#efe3d0" : "#dce8fb";
+    } }
 </script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -124,6 +126,7 @@
   .seg { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .seg button { border:1px solid #2f3a48; background:#1a212b; color:var(--fg); border-radius:14px; padding:12px;
     font:inherit; font-size:15px; font-weight:650; cursor:pointer; }
+  .seg3 { grid-template-columns:repeat(3,1fr); }
   .seg5 { grid-template-columns:repeat(5,1fr); gap:6px; margin-top:8px; }
   .seg5 button { padding:12px 0; }
   .seg button.sel { border-color:var(--on); box-shadow:inset 0 0 0 1px var(--on); }
@@ -155,6 +158,52 @@
   html.light .key { background:#eef1f5; }
   html.light #updBtn, html.light .linkbtn, html.light .seg button { background:#f3f6fb; border-color:#dfe5ee; }
   html.light #updBtn:active { background:#e9eef7; }
+  /* ---------- Clay theme (v2026.11.21-2, optional; built on light mode). UI UX Pro Max "Nature Distilled":
+     cream + terracotta + olive, serif headings, grain, soft warm shadows. Contrast >= 4.5:1 checked ---------- */
+  html.clay { --bg:#f5efe4; --card:#fffaf2; --line:#e6dccb; --fg:#2e2620; --muted:#6f5f50;
+    --on:#a4482a; --night:#5a5f8a; --ok:#4f6b25; --bad:#b3261e; --amber:#a35600; --sky:#2f6f9f; }
+  html.clay body { background:radial-gradient(120% 60% at 50% 0%,#ecdcc4 0%,#f3eadc 45%,#f7f2e9 100%) fixed; }
+  html.clay body::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.07;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  html.clay main { position:relative; z-index:1; }
+  html.clay nav { z-index:2; }
+  html.clay .brand, html.clay header h1 { font-family:ui-serif,"Iowan Old Style","Palatino Linotype",Georgia,serif; }
+  html.clay .brand { color:var(--on); font-size:21px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600;
+    border-bottom:1px dashed #d8c7ad; }
+  html.clay header h1 { font-size:30px; font-weight:600; letter-spacing:.2px; }
+  html.clay .pill, html.clay .upd, html.clay .app, html.clay .steps { border-radius:22px; border-color:var(--line);
+    box-shadow:inset 0 1px 0 #fff, 0 6px 18px rgba(110,70,30,.08); }
+  html.clay .pill.ok b { color:var(--ok); } html.clay .pill.warn b { color:var(--amber); }
+  html.clay .gcircle { width:min(58vw,224px,30dvh); color:var(--fg);
+    background:radial-gradient(circle at 50% 28%,#fffdf8 0%,#f6ecdc 62%,#ecdcc4 100%);
+    box-shadow:0 0 0 2px #fffaf2, 0 0 0 9px var(--ring), 0 0 0 11px color-mix(in srgb,var(--ring) 25%,transparent),
+      0 18px 34px rgba(110,70,30,.22), inset 0 -6px 14px rgba(150,100,50,.12), inset 0 2px 0 #fff; }
+  html.clay .gcircle span { color:var(--muted); }
+  html.clay .gcircle.closed { --ring:var(--ok); } html.clay .gcircle.open { --ring:var(--amber); }
+  html.clay .gcircle.moving { --ring:var(--sky); animation:clayPulse 1.6s ease-in-out infinite; }
+  html.clay .gcircle.unknown { --ring:var(--bad); }
+  @keyframes clayPulse { 50% { box-shadow:0 0 0 2px #fffaf2, 0 0 0 12px var(--ring), 0 0 0 20px color-mix(in srgb,var(--ring) 18%,transparent),
+      0 18px 34px rgba(110,70,30,.22); } }
+  html.clay .gbtn { border-radius:24px; background:linear-gradient(170deg,#fffcf6,#f4eadb); border-color:#e2d4bd; color:var(--fg);
+    box-shadow:inset 0 1px 0 #fff, 0 8px 18px rgba(110,70,30,.12); }
+  html.clay .gbtn svg { fill:var(--on); }
+  html.clay .gbtn:active { background:#efe1cc; }
+  html.clay .gbtn.now-locked { background:linear-gradient(170deg,#eef3e2,#dfe8cc); border-color:#a9bd85; }
+  html.clay .gbtn.now-locked svg { fill:var(--ok); }
+  html.clay .gbtn.now-unlocked { background:linear-gradient(170deg,#fbefdc,#f3dcb8); border-color:#d9a865; }
+  html.clay .gbtn.now-unlocked svg { fill:var(--amber); }
+  html.clay nav { background:#fffaf2f0; border-top-color:#e6dccb; }
+  html.clay nav button { color:var(--muted); }
+  html.clay nav button.active { background:#f1e0cb; color:#8a3f22; font-weight:600; }
+  html.clay nav .gico svg { fill:var(--on); }
+  html.clay #updBtn, html.clay .linkbtn, html.clay .seg button { background:#fbf5ea; border-color:#e2d4bd; color:var(--fg); border-radius:16px; }
+  html.clay .seg button.sel { border-color:var(--on); box-shadow:inset 0 0 0 1px var(--on); background:#f7e6d6; color:#8a3f22; }
+  html.clay #installBtn { background:linear-gradient(135deg,#c2643f,#b5532f); color:#fff8ee; }
+  html.clay #netBtn { background:linear-gradient(135deg,#f3e9d8,#ead9bf); color:#4a3d32; box-shadow:inset 0 0 0 1px #d8c7ad; }
+  html.clay .key { background:#f1e7d8; }
+  html.clay .steps ol { color:#4a3d32; }
+  html.clay button:focus-visible { outline:3px solid var(--on); outline-offset:3px; }
+  @media (prefers-reduced-motion: reduce) { html.clay .gcircle.moving { animation:none; } }
 </style>
 </head>
 <body>
@@ -206,7 +255,7 @@
 
   <div class="upd">
     <div class="row"><span>Appearance</span><b id="themeNow">…</b></div>
-    <div class="seg"><button data-theme="dark">🌙 Dark</button><button data-theme="light">☀️ Light</button></div>
+    <div class="seg seg3"><button data-theme="dark">🌙 Dark</button><button data-theme="light">☀️ Light</button><button data-theme="clay">🏺 Clay</button></div>
     <div class="row" style="margin-top:14px"><span>Vibration on tap</span><b id="hapNow">…</b></div>
     <div class="seg"><button data-hap="on">📳 On</button><button data-hap="off">🔕 Off</button></div>
     <div class="row" style="margin-top:14px"><span>Vibration strength</span><b id="hlNow">…</b></div>
@@ -254,7 +303,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.11.21-1";
+const APP_VERSION = "2026.11.21-2";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -294,14 +343,16 @@ function showSince() {
 setInterval(showSince, 30000);  // counts up on the phone; costs no messages
 
 function setTheme(t) {
-  document.documentElement.classList.toggle("light", t === "light");
+  if (!["dark", "light", "clay"].includes(t)) t = "dark";  // Dark stays the default
+  document.documentElement.classList.toggle("light", t !== "dark");  // Clay builds on light mode
+  document.documentElement.classList.toggle("clay", t === "clay");
   localStorage.setItem("home.theme", t);
-  document.querySelector('meta[name="theme-color"]').content = t === "light" ? "#dce8fb" : "#0b0f14";
-  $("#themeNow").textContent = t === "light" ? "☀️ Light" : "🌙 Dark";
+  document.querySelector('meta[name="theme-color"]').content = { dark: "#0b0f14", light: "#dce8fb", clay: "#efe3d0" }[t];
+  $("#themeNow").textContent = { dark: "🌙 Dark", light: "☀️ Light", clay: "🏺 Clay" }[t];
   document.querySelectorAll("[data-theme]").forEach(b => b.classList.toggle("sel", b.dataset.theme === t));
 }
 document.querySelectorAll("[data-theme]").forEach(b => b.onclick = () => setTheme(b.dataset.theme));
-setTheme(localStorage.getItem("home.theme") === "light" ? "light" : "dark");
+setTheme(localStorage.getItem("home.theme"));
 
 localStorage.removeItem("home.controls");  // Controls tab removed in v2026.11.21-1
 

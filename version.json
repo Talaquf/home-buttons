@@ -1,4 +1,4 @@
 {
-  "version": "2026.11.21-1",
-  "notes": "Garage Door: one big round button (open / close / stop while moving); Controls tab removed"
+  "version": "2026.11.21-2",
+  "notes": "New optional Clay theme (App › Appearance); Dark stays the default"
 }
