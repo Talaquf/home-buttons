@@ -301,7 +301,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.11.21-5";
+const APP_VERSION = "2026.11.21-6";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -432,6 +432,7 @@ function render(m) {
 }
 
 function offerLocal() { if (!LOCAL) $("#localBtn").style.display = "block"; }
+function hideLocal() { $("#localBtn").style.display = "none"; }
 function goLocal() { location.href = `${LAN_URL}#c=${encodeURIComponent(CMD)}&s=${encodeURIComponent(STATE)}`; }
 
 async function send(cmd, el) {
@@ -468,7 +469,7 @@ async function send(cmd, el) {
 
 // Automatic status requests cost 2 ntfy messages each in internet mode (free quota ≈250/day),
 // so skip one when a state just arrived or a request on an open connection is still pending.
-let es = null, lastMsg = 0, lastAuto = 0;
+let es = null, esErr = null, lastMsg = 0, lastAuto = 0;
 function autoStatus(fresh) {  // fresh: the connection just (re)opened
   if (!LOCAL) {
     const now = Date.now();
@@ -483,10 +484,20 @@ if (LOCAL) {
   $("#netBtn").style.display = "block";
   send("status");
 } else {
+  connect();
+}
+// Internet mode: the ntfy stream often drops for a moment when the app opens or comes back from the background and
+// reconnects by itself. Offer local mode only if it is still down after 6 s, and hide the offer again once it's back.
+function connect() {
+  if (es) es.close();
   es = new EventSource(`${NTFY}/${STATE}/sse`);
-  es.onmessage = ev => { lastMsg = Date.now(); try { render(JSON.parse(JSON.parse(ev.data).message)); } catch (e) {} };
-  es.onopen = () => autoStatus(true);
-  es.onerror = () => { note.textContent = "⚠️ Internet route unavailable"; offerLocal(); };
+  es.onmessage = ev => { lastMsg = Date.now(); hideLocal(); try { render(JSON.parse(JSON.parse(ev.data).message)); } catch (e) {} };
+  es.onopen = () => { clearTimeout(esErr); hideLocal(); autoStatus(true); };
+  es.onerror = () => {
+    clearTimeout(esErr);
+    esErr = setTimeout(() => { if (es.readyState !== EventSource.OPEN) { note.textContent = "⚠️ Internet route unavailable"; offerLocal(); } },
+      es.readyState === EventSource.CLOSED ? 0 : 6000);
+  };
 }
 $("#localBtn").onclick = goLocal;
 $("#netBtn").onclick = () => { location.href = NET_URL; };
@@ -523,7 +534,9 @@ $("#dToggle").onclick = () => {
   if (LOCAL) dChecks = [10, 25].map(s => setTimeout(() => { if (dState === "locking" || dState === "unlocking") localPeek(); }, s * 1000));
 };
 localStorage.removeItem("home.more");  // old Garage › See more setting
-document.addEventListener("visibilitychange", () => { if (!document.hidden) { autoStatus(); checkUpdates(false); } });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) {
+  if (!LOCAL && es && es.readyState === EventSource.CLOSED) connect();  // onopen then asks for status once
+  autoStatus(); checkUpdates(false); } });
 
 // Tabs
 function showTab(name) {
