@@ -65,6 +65,7 @@
   .gcircle.closed { --ring:var(--ok); } .gcircle.open { --ring:#ff9f0a; }
   .gcircle.moving { --ring:#0a84ff; animation:gpulse 1.4s ease-in-out infinite; }
   .gcircle.unknown { --ring:var(--bad); }
+  .gcircle.locked { --ring:var(--ok); } .gcircle.unlocked { --ring:#ff9f0a; }  /* Front Door circle (v2026.11.21-4) */
   .gcircle.busy { opacity:.7; }
   @keyframes gpulse { 50% { box-shadow:0 0 0 10px color-mix(in srgb,var(--ring) 60%,transparent), 0 0 60px 12px color-mix(in srgb,var(--ring) 40%,transparent),
       0 14px 30px rgba(0,0,0,.45); } }
@@ -92,8 +93,6 @@
   #tab-door:not([hidden]) { flex:1; }
   #tab-door header { text-align:center; }
   .gbtns.two { grid-template-columns:repeat(2,1fr); }
-  .gbtn.now-locked { background:linear-gradient(160deg,rgba(76,195,138,.28),rgba(30,60,45,.25)); border-color:rgba(76,195,138,.45); }
-  .gbtn.now-unlocked { background:linear-gradient(160deg,rgba(255,159,10,.30),rgba(60,50,30,.25)); border-color:rgba(255,159,10,.45); }
   #dSub { margin:0; text-align:center; color:var(--muted); font-size:18px; }
   #dNote { margin-top:auto; text-align:center; color:var(--muted); font-size:12px; min-height:1.2em; }
   nav button.active { color:var(--fg); background:var(--card); }
@@ -182,16 +181,13 @@
   html.clay .gcircle.closed { --ring:var(--ok); } html.clay .gcircle.open { --ring:var(--amber); }
   html.clay .gcircle.moving { --ring:var(--sky); animation:clayPulse 1.6s ease-in-out infinite; }
   html.clay .gcircle.unknown { --ring:var(--bad); }
+  html.clay .gcircle.locked { --ring:var(--ok); } html.clay .gcircle.unlocked { --ring:var(--amber); }
   @keyframes clayPulse { 50% { box-shadow:0 0 0 2px #fffaf2, 0 0 0 12px var(--ring), 0 0 0 20px color-mix(in srgb,var(--ring) 18%,transparent),
       0 18px 34px rgba(110,70,30,.22); } }
   html.clay .gbtn { border-radius:24px; background:linear-gradient(170deg,#fffcf6,#f4eadb); border-color:#e2d4bd; color:var(--fg);
     box-shadow:inset 0 1px 0 #fff, 0 8px 18px rgba(110,70,30,.12); }
   html.clay .gbtn svg { fill:var(--on); }
   html.clay .gbtn:active { background:#efe1cc; }
-  html.clay .gbtn.now-locked { background:linear-gradient(170deg,#eef3e2,#dfe8cc); border-color:#a9bd85; }
-  html.clay .gbtn.now-locked svg { fill:var(--ok); }
-  html.clay .gbtn.now-unlocked { background:linear-gradient(170deg,#fbefdc,#f3dcb8); border-color:#d9a865; }
-  html.clay .gbtn.now-unlocked svg { fill:var(--amber); }
   html.clay nav { background:#fffaf2f0; border-top-color:#e6dccb; }
   html.clay nav button { color:var(--muted); }
   html.clay nav button.active { background:#f1e0cb; color:#8a3f22; font-weight:600; }
@@ -235,11 +231,10 @@
     <div class="pill" id="pLock"><small>Lock</small><b>…</b></div>
     <div class="pill" id="pBatt"><small>Battery</small><b>…</b></div>
   </div>
-  <div class="gbtns two">
-    <button class="gbtn" data-d="lock"><svg viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/></svg><span>Lock</span></button>
-    <button class="gbtn" data-d="unlock"><svg viewBox="0 0 24 24"><path d="M18,1C15.24,1 13,3.24 13,6V8H4A2,2 0 0,0 2,10V20A2,2 0 0,0 4,22H16A2,2 0 0,0 18,20V10A2,2 0 0,0 16,8H15V6A3,3 0 0,1 18,3A3,3 0 0,1 21,6V8H23V6C23,3.24 20.76,1 18,1M10,13A2,2 0 0,1 12,15A2,2 0 0,1 10,17A2,2 0 0,1 8,15A2,2 0 0,1 10,13Z"/></svg><span>Unlock</span></button>
-  </div>
   <p id="dSub">…</p>
+  <div class="gwrap">
+    <button class="gcircle" id="dToggle" aria-label="Front door lock"><svg viewBox="0 0 24 24"><path id="dIcon" d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/></svg><b id="dState">…</b><span id="dAction">Connecting…</span></button>
+  </div>
   <div id="dNote" class="note"></div>
  </section>
 
@@ -303,7 +298,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.11.21-3";
+const APP_VERSION = "2026.11.21-4";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -323,6 +318,7 @@ if (!CMD || !STATE) {
 const $ = s => document.querySelector(s),
   note = { set textContent(t) { document.querySelectorAll(".note").forEach(e => e.textContent = t); } };
 let dChecks = [], dState = null, dOpen = null;
+const DICON = { locked: "M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z", unlocked: "M18,1C15.24,1 13,3.24 13,6V8H4A2,2 0 0,0 2,10V20A2,2 0 0,0 4,22H16A2,2 0 0,0 18,20V10A2,2 0 0,0 16,8H15V6A3,3 0 0,1 18,3A3,3 0 0,1 21,6V8H23V6C23,3.24 20.76,1 18,1M10,13A2,2 0 0,1 12,15A2,2 0 0,1 10,17A2,2 0 0,1 8,15A2,2 0 0,1 10,13Z" };
 const GICON = { open: "M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12Z", closed: "M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z" };
 let timer = null, gPoll = null, gPolls = 0, gState = null, gSince = null;
 
@@ -409,8 +405,13 @@ function render(m) {
     const b = parseFloat(m.door_battery);
     pill("#pBatt", !Number.isFinite(b) ? "bad" : b <= 20 ? "bad" : b <= 35 ? "warn" : "ok", Number.isFinite(b) ? `${Math.round(b)} %` : "Unavailable");
     $("#dSub").textContent = m.door_open === "on" ? "Door is open" : m.door_open === "off" ? "Door closed" : "Door sensor unavailable";
-    document.querySelector('.gbtn[data-d="lock"]').classList.toggle("now-locked", d === "locked" || d === "locking");
-    document.querySelector('.gbtn[data-d="unlock"]').classList.toggle("now-unlocked", d === "unlocked" || d === "unlocking");
+    // Round lock button: locked → tap to unlock (asks first); unlocked → tap to lock (not while the door is open)
+    const dMoving = d === "locking" || d === "unlocking", dKnown = ["locked", "unlocked", "jammed"].includes(d) || dMoving;
+    $("#dToggle").className = "gcircle " + (!dKnown || d === "jammed" ? "unknown" : dMoving ? "moving" : d);
+    $("#dState").textContent = D || "Unavailable";
+    $("#dAction").textContent = !dKnown ? "Can't tap now" : dMoving ? "Please wait" : d === "locked" ? "Tap to unlock"
+      : dOpen ? "Close the door first" : "Tap to lock";
+    $("#dIcon").setAttribute("d", d === "unlocked" || d === "unlocking" ? DICON.unlocked : DICON.locked);
     if (m.event === "door_open") $("#dSub").textContent = "⚠️ Door is open. Close it, then lock.";
     else if (d === "jammed") $("#dSub").textContent = "⚠️ Lock jammed. Check the door.";
   }
@@ -505,14 +506,19 @@ async function localPeek() {
 }
 // Lock first tap; Unlock asks first. A slow Bluetooth answer: the relay publishes once when it settles;
 // local mode re-reads GET api/status (free) at 10 and 25 s instead.
-document.querySelectorAll("[data-d]").forEach(b => b.onclick = () => {
-  const a = b.dataset.d;
+let dTapAt = 0;
+$("#dToggle").onclick = () => {
+  const b = $("#dToggle");  // ignore taps while busy/moving and for 2.5 s after one
+  if (b.classList.contains("busy") || Date.now() - dTapAt < 2500) return;
+  if (!["locked", "unlocked", "jammed"].includes(dState)) return;
+  const a = dState === "locked" ? "unlock" : "lock";
   if (a === "lock" && dOpen) { $("#dSub").textContent = "⚠️ Door is open. Close it, then lock."; return; }
   if (a === "unlock" && !confirm("Unlock the front door?")) return;
+  dTapAt = Date.now();
   dChecks.forEach(clearTimeout);
   send("door_" + a, b);
   if (LOCAL) dChecks = [10, 25].map(s => setTimeout(() => { if (dState === "locking" || dState === "unlocking") localPeek(); }, s * 1000));
-});
+};
 localStorage.removeItem("home.more");  // old Garage › See more setting
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { autoStatus(); checkUpdates(false); } });
 
