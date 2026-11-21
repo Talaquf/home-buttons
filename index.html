@@ -9,12 +9,9 @@
   { const fit = () => document.documentElement.style.setProperty("--app-h", innerHeight + "px");
     fit(); addEventListener("resize", fit); }
   { const t = localStorage.getItem("home.theme");
-    if (t === "light" || t === "clay") {
-      document.documentElement.classList.add("light");
-      if (t === "clay") document.documentElement.classList.add("clay");
-      document.querySelector('meta[name="theme-color"]').content = t === "clay" ? "#efe3d0" : "#dce8fb";
-    }
-    if (t === "soft") { document.documentElement.classList.add("light", "soft"); document.querySelector('meta[name="theme-color"]').content = "#e4e9f0"; } }
+    if (t === "clay") { document.documentElement.classList.add("light", "clay"); document.querySelector('meta[name="theme-color"]').content = "#efe3d0"; }
+    if (t === "sand") { document.documentElement.classList.add("light", "sand"); document.querySelector('meta[name="theme-color"]').content = "#e9dcc3"; }
+    if (t === "ember") { document.documentElement.classList.add("ember"); document.querySelector('meta[name="theme-color"]').content = "#16120f"; } }
 </script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -205,52 +202,55 @@
   html.clay .steps ol { color:#4a3d32; }
   html.clay button:focus-visible { outline:3px solid var(--on); outline-offset:3px; }
   @media (prefers-reduced-motion: reduce) { html.clay .gcircle.moving { animation:none; } }
-  /* ---------- Soft theme (v2026.11.21-8, optional; built on light). UI UX Pro Max "Soft UI Evolution": neumorphism with
-     measured contrast (text >= 4.5:1) — controls raised out of one surface (light top-left + shade bottom-right), pressed = inset ---------- */
-  html.soft { --bg:#e4e9f0; --card:#e4e9f0; --line:#d3dae4; --fg:#1f2937; --muted:#4b5563;
-    --on:#2a55b0; --ok:#166534; --bad:#b91c1c; --amber:#92400e; --sky:#0369a1;
-    --up:7px 7px 16px rgba(150,164,186,.55), -7px -7px 16px rgba(255,255,255,.95);
-    --in:inset 5px 5px 10px rgba(150,164,186,.5), inset -5px -5px 10px rgba(255,255,255,.95); }
-  html.soft body { background:#e4e9f0; }
-  html.soft main { position:relative; z-index:1; }
-  html.soft nav { z-index:2; }
-  html.soft .brand { color:var(--on); font-weight:800; letter-spacing:.4px; border-bottom:1px solid #c9d1dc;
-    box-shadow:0 1px 0 #fff; }
-  html.soft header h1 { font-weight:800; letter-spacing:-.3px; color:var(--fg); }
-  html.soft .pill, html.soft .upd, html.soft .app, html.soft .steps { background:var(--bg); border:none; border-radius:22px; box-shadow:var(--up); }
-  html.soft .pill.ok b { color:var(--ok); } html.soft .pill.warn b { color:var(--amber); } html.soft .pill.bad b { color:var(--bad); }
-  html.soft .gcircle { color:var(--fg); background:linear-gradient(145deg,#eef2f7,#d8dee7);
-    box-shadow:14px 14px 30px rgba(150,164,186,.6), -14px -14px 30px rgba(255,255,255,.95),
-      inset 0 0 0 9px var(--bg), inset 0 0 0 15px color-mix(in srgb,var(--ring) 85%,transparent),
-      inset 0 0 0 17px rgba(255,255,255,.7), inset 4px 4px 10px rgba(150,164,186,.35);
-    transition:transform .2s ease, box-shadow .25s ease; }
-  html.soft .gcircle:active { transform:scale(.98);
-    box-shadow:4px 4px 10px rgba(150,164,186,.5), -4px -4px 10px rgba(255,255,255,.9),
-      inset 0 0 0 9px var(--bg), inset 0 0 0 15px var(--ring), inset 10px 10px 24px rgba(150,164,186,.45), inset -8px -8px 20px rgba(255,255,255,.8); }
-  html.soft .gcircle span { color:var(--muted); }
-  html.soft .gcircle.closed, html.soft .gcircle.locked { --ring:var(--ok); }
-  html.soft .gcircle.open, html.soft .gcircle.unlocked { --ring:var(--amber); }
-  html.soft .gcircle.moving { --ring:var(--sky); animation:softPulse 1.6s ease-in-out infinite; }
-  html.soft .gcircle.unknown { --ring:var(--bad); }
-  @keyframes softPulse { 50% { box-shadow:8px 8px 18px rgba(150,164,186,.5), -8px -8px 18px rgba(255,255,255,.9),
-      inset 0 0 0 9px var(--bg), inset 0 0 0 15px color-mix(in srgb,var(--ring) 45%,transparent), inset 4px 4px 10px rgba(150,164,186,.35); } }
-  html.soft nav { background:#e4e9f0f2; border-top:none; box-shadow:0 -6px 16px rgba(150,164,186,.35); }
-  html.soft nav button { color:var(--muted); }
-  html.soft nav button.active { background:var(--bg); color:var(--on); font-weight:700; box-shadow:var(--in); }
-  html.soft nav .gico svg { fill:var(--on); }
-  html.soft #updBtn, html.soft .linkbtn, html.soft .seg button { background:var(--bg); border:none; color:var(--fg); border-radius:16px; box-shadow:var(--up); }
-  html.soft #updBtn:active, html.soft .linkbtn:active, html.soft .seg button:active { box-shadow:var(--in); }
-  html.soft .seg button.sel { box-shadow:var(--in); color:var(--on); }
-  html.soft .mode, html.soft #netBtn, html.soft #updBanner { background:var(--bg); box-shadow:var(--up); }
-  html.soft .mode { color:#7c2d12; box-shadow:var(--up), inset 0 0 0 2px rgba(146,64,14,.45); }
-  html.soft #netBtn { color:#1e3a8a; }
-  html.soft #updBanner { color:#14532d; box-shadow:var(--up), inset 0 0 0 2px rgba(22,101,52,.45); }
-  html.soft #installBtn { background:linear-gradient(145deg,#3a6fd6,#2a55b0); color:#fff; box-shadow:var(--up); }
-  html.soft .done { background:var(--bg); color:#14532d; box-shadow:var(--in); border:none; }
-  html.soft .key { background:var(--bg); box-shadow:inset 2px 2px 4px rgba(150,164,186,.5), inset -2px -2px 4px #fff; }
-  html.soft .steps ol { color:#374151; }
-  html.soft button:focus-visible { outline:3px solid var(--on); outline-offset:3px; }
-  @media (prefers-reduced-motion: reduce) { html.soft .gcircle.moving { animation:none; } }
+
+/* ---------- Sand (v2026.11.21-10, UI UX Pro Max Nature Distilled, desert variant): sand + date-palm green + brass ---------- */
+html.sand { --bg:#f1e9da; --card:#fbf6ec; --line:#e2d6c0; --fg:#2a2419; --muted:#6b5e49;
+  --on:#2f5d3a; --ok:#2f6b3f; --bad:#a3261b; --amber:#9a5a08; --sky:#1f5f8f; --brass:#a87a2c; }
+html.sand body { background:linear-gradient(180deg,#e9dcc3 0%,#f1e9da 38%,#f6f0e4 100%) fixed; }
+html.sand body::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.05;
+  background-image:repeating-radial-gradient(circle at 30% 20%,#7a5b2a 0 1px,transparent 1px 3px); }
+html.sand main { position:relative; z-index:1; } html.sand nav { z-index:2; }
+html.sand .brand { color:var(--brass); font-weight:700; letter-spacing:3px; text-transform:uppercase; font-size:17px; border-bottom-color:var(--line); }
+html.sand header h1 { font-weight:700; letter-spacing:-.2px; }
+html.sand .pill, html.sand .upd, html.sand .app, html.sand .steps { background:var(--card); border-color:var(--line); border-radius:20px;
+  box-shadow:0 2px 0 #e6d9c1, 0 8px 18px rgba(120,90,40,.08); }
+html.sand .pill.ok b { color:var(--ok); } html.sand .pill.warn b { color:var(--amber); }
+html.sand .gcircle { color:var(--fg); background:radial-gradient(circle at 50% 28%,#fffdf8,#f3eadb 72%);
+  box-shadow:0 0 0 2px #fbf6ec, 0 0 0 9px var(--ring), 0 0 0 14px color-mix(in srgb,var(--ring) 14%,transparent), 0 18px 34px rgba(110,80,30,.20); }
+html.sand .gcircle span { color:var(--muted); }
+html.sand .gcircle.closed, html.sand .gcircle.locked { --ring:var(--ok); }
+html.sand .gcircle.open, html.sand .gcircle.unlocked { --ring:var(--amber); }
+html.sand nav { background:#fbf6ecf2; border-top-color:var(--line); }
+html.sand nav button { color:var(--muted); }
+html.sand nav button.active { background:#e5ecdf; color:var(--on); font-weight:700; }
+html.sand nav .gico svg { fill:var(--on); }
+html.sand #updBtn, html.sand .linkbtn, html.sand .seg button { background:#f7f0e3; border-color:var(--line); color:var(--fg); }
+html.sand .seg button.sel { border-color:var(--on); box-shadow:inset 0 0 0 1px var(--on); background:#e5ecdf; color:var(--on); }
+html.sand .key { background:#efe5d3; } html.sand .steps ol { color:#463c2e; }
+html.sand #installBtn { background:linear-gradient(135deg,#3a7048,#2f5d3a); color:#fbf6ec; }
+
+/* ---------- Ember (v2026.11.21-10, UI UX Pro Max warm matte dark): charcoal-brown, copper + amber, no blur, no neon ---------- */
+html.ember { --bg:#16120f; --card:#211b16; --line:#342a22; --fg:#f3e9dc; --muted:#b3a291;
+  --on:#e0915a; --ok:#6fcf8f; --bad:#ff7a6b; --amber:#f2b14c; --sky:#7cb8ff; }
+html.ember body { background:radial-gradient(120% 60% at 50% 0%,#2a1f17 0%,#16120f 60%) fixed; }
+html.ember .brand { color:var(--on); font-weight:700; letter-spacing:2.5px; text-transform:uppercase; font-size:17px; border-bottom-color:var(--line); }
+html.ember .pill, html.ember .upd, html.ember .app, html.ember .steps { background:var(--card); border-color:var(--line); border-radius:20px;
+  box-shadow:inset 0 1px 0 rgba(255,220,180,.05); }
+html.ember .pill.ok b { color:var(--ok); } html.ember .pill.warn b { color:var(--amber); }
+html.ember .gcircle { color:var(--fg); background:radial-gradient(circle at 50% 28%,#3a2e25,#211b16 70%);
+  box-shadow:0 0 0 5px var(--ring), 0 0 0 12px color-mix(in srgb,var(--ring) 12%,transparent), 0 20px 40px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,220,180,.10); }
+html.ember .gcircle span { color:var(--muted); }
+html.ember .gcircle.closed, html.ember .gcircle.locked { --ring:var(--ok); }
+html.ember .gcircle.open, html.ember .gcircle.unlocked { --ring:var(--amber); }
+html.ember nav { background:#16120f; border-top-color:var(--line); backdrop-filter:none; }
+html.ember nav button.active { background:#2c231c; color:var(--on); font-weight:600; }
+html.ember nav .gico svg { fill:var(--on); }
+html.ember #updBtn, html.ember .linkbtn, html.ember .seg button { background:#2a221b; border-color:#3e3229; color:var(--fg); }
+html.ember .seg button.sel { border-color:var(--on); box-shadow:inset 0 0 0 1px var(--on); color:var(--on); }
+html.ember .key { background:#342a22; } html.ember .steps ol { color:#dccfbf; }
+html.ember #installBtn { background:linear-gradient(135deg,#e9a16a,#c9733d); color:#1d120a; }
+
+  html.sand button:focus-visible, html.ember button:focus-visible { outline:3px solid var(--on); outline-offset:3px; }
 </style>
 </head>
 <body>
@@ -301,7 +301,7 @@
 
   <div class="upd">
     <div class="row"><span>Appearance</span><b id="themeNow">…</b></div>
-    <div class="seg"><button data-theme="dark">🌙 Dark</button><button data-theme="light">☀️ Light</button><button data-theme="clay">🏺 Clay</button><button data-theme="soft">☁️ Soft</button></div>
+    <div class="seg"><button data-theme="dark">🌙 Dark</button><button data-theme="clay">🏺 Clay</button><button data-theme="sand">🏜️ Sand</button><button data-theme="ember">🔥 Ember</button></div>
     <div class="row" style="margin-top:14px"><span>Vibration on tap</span><b id="hapNow">…</b></div>
     <div class="seg"><button data-hap="on">📳 On</button><button data-hap="off">🔕 Off</button></div>
     <div class="row" style="margin-top:14px"><span>Vibration strength</span><b id="hlNow">…</b></div>
@@ -350,7 +350,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.11.21-9";
+const APP_VERSION = "2026.11.21-10";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -406,13 +406,14 @@ function showSince() {
 setInterval(showSince, 30000);  // counts up on the phone; costs no messages
 
 function setTheme(t) {
-  if (!["dark", "light", "clay", "soft"].includes(t)) t = "dark";  // Dark stays the default (also replaces the removed Glass)
-  document.documentElement.classList.toggle("light", t !== "dark");  // Clay and Soft build on light mode
+  if (!["dark", "clay", "sand", "ember"].includes(t)) t = "dark";  // Dark stays the default (also replaces the removed Glass, Light and Soft)
+  document.documentElement.classList.toggle("light", t !== "dark" && t !== "ember");  // Clay and Sand build on the light base styles; Ember on dark
   document.documentElement.classList.toggle("clay", t === "clay");
-  document.documentElement.classList.toggle("soft", t === "soft");
+  document.documentElement.classList.toggle("sand", t === "sand");
+  document.documentElement.classList.toggle("ember", t === "ember");
   localStorage.setItem("home.theme", t);
-  document.querySelector('meta[name="theme-color"]').content = { dark: "#0b0f14", light: "#dce8fb", clay: "#efe3d0", soft: "#e4e9f0" }[t];
-  $("#themeNow").textContent = { dark: "🌙 Dark", light: "☀️ Light", clay: "🏺 Clay", soft: "☁️ Soft" }[t];
+  document.querySelector('meta[name="theme-color"]').content = { dark: "#0b0f14", clay: "#efe3d0", sand: "#e9dcc3", ember: "#16120f" }[t];
+  $("#themeNow").textContent = { dark: "🌙 Dark", clay: "🏺 Clay", sand: "🏜️ Sand", ember: "🔥 Ember" }[t];
   document.querySelectorAll("[data-theme]").forEach(b => b.classList.toggle("sel", b.dataset.theme === t));
 }
 document.querySelectorAll("[data-theme]").forEach(b => b.onclick = () => setTheme(b.dataset.theme));
