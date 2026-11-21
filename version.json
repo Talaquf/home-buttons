@@ -1,4 +1,4 @@
 {
-  "version": "2026.11.21-7",
-  "notes": "New optional Glass theme (App › Appearance); Dark stays the default"
+  "version": "2026.11.21-8",
+  "notes": "Glass theme removed; new optional Soft theme (App › Appearance)"
 }
