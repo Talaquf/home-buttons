@@ -18,6 +18,7 @@
 </script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
 <title>Home</title>
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -254,7 +255,7 @@
 </head>
 <body>
 <main>
-  <div class="brand">Mohsenovic Home</div>
+  <div class="brand">Mohsen Home</div>
   <button class="mode" id="localBtn">🏠 <b>Internet route isn't answering.</b> Tap to switch to local mode (works on home Wi-Fi without internet)</button>
   <button class="mode" id="netBtn">🌐 Back to internet mode</button>
   <button id="updBanner">✨ <b>Update available</b>. Tap to update now</button>
@@ -325,7 +326,8 @@
     </ol>
     <h3>iPhone (Safari)</h3>
     <ol>
-      <li>Tap Share <span class="key">⬆︎</span> → <span class="key">Add to Home Screen</span> → <span class="key">Add</span></li>
+      <li>Tap Share <span class="key">⬆︎</span> (or <span class="key">•••</span> → Share) → <span class="key">Add to Home Screen</span> → <span class="key">Add</span></li>
+      <li>Open the new <b>Home</b> icon. It asks for your link once (iPhone keeps the app separate from Safari): copy your setup link, tap <span class="key">📋 Paste</span></li>
     </ol>
   </div>
   <div class="upd">
@@ -348,7 +350,7 @@
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.11.21-8";
+const APP_VERSION = "2026.11.21-9";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -360,9 +362,24 @@ if (hp.get("c") && hp.get("s")) {
 }
 const CMD = localStorage.getItem("home.cmd"), STATE = localStorage.getItem("home.state");
 if (!CMD || !STATE) {
+  // iPhone: the Home Screen app has its own storage (separate from Safari), so it starts here once; paste the link to connect
   document.querySelector("main").innerHTML = '<section><header><h1>Not set up</h1>' +
-    '<p>Open your personal link once on this phone to connect it to your home.</p></header></section>';
+    '<p>Open your personal link once on this phone, or paste it here.</p></header>' +
+    '<div class="upd"><input id="linkIn" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste your setup link" ' +
+    'style="width:100%;font:inherit;font-size:16px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg)">' +
+    '<button class="linkbtn" id="pasteBtn" style="margin-top:10px">📋 Paste</button><button class="linkbtn" id="linkGo" style="margin-top:10px">✅ Connect</button>' +
+    '<div class="hint" id="linkMsg"></div></div></section>';
   document.querySelector("nav").remove();
+  const go = () => {
+    const m = /[#&]c=([\w-]{8,})&s=([\w-]{8,})/.exec(document.getElementById("linkIn").value.trim());
+    if (!m) { document.getElementById("linkMsg").textContent = "⚠️ That isn't a setup link. Copy the whole link and try again."; return; }
+    localStorage.setItem("home.cmd", m[1]); localStorage.setItem("home.state", m[2]); location.reload();
+  };
+  document.getElementById("linkGo").onclick = go;
+  document.getElementById("pasteBtn").onclick = async () => {
+    try { document.getElementById("linkIn").value = await navigator.clipboard.readText(); go(); }
+    catch (e) { document.getElementById("linkMsg").textContent = "Press and hold in the box above, then tap Paste."; }
+  };
   throw new Error("no private link");
 }
 const $ = s => document.querySelector(s),
@@ -436,6 +453,7 @@ function setHaptics(v) {
 }
 document.querySelectorAll("[data-hap]").forEach(b => b.onclick = () => setHaptics(b.dataset.hap));
 setHaptics(localStorage.getItem("home.haptics") === "off" ? "off" : "on");
+if (!navigator.vibrate) { $("#hlSeg").style.display = "none"; $("#hlNow").parentElement.style.display = "none"; }  // iPhone: fixed system tick, no strength
 
 function render(m) {
   clearTimeout(timer);
