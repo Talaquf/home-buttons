@@ -1,4 +1,4 @@
 {
-  "version": "2026.11.21-6",
-  "notes": "No more false \"Internet route isn't answering\" banner when the app opens"
+  "version": "2026.11.21-7",
+  "notes": "New optional Glass theme (App › Appearance); Dark stays the default"
 }
