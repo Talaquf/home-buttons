@@ -30,35 +30,6 @@
   .brand { text-align:center; font-size:20px; font-weight:700; letter-spacing:.3px; color:var(--on);
     padding-bottom:12px; border-bottom:1px solid var(--line); }
   header p { margin:4px 0 0; color:var(--muted); font-size:14px; }
-  .status { display:flex; gap:10px; }
-  .chip { flex:1; background:var(--card); border:1px solid var(--line); border-radius:14px;
-    padding:12px; font-size:14px; display:flex; align-items:center; gap:8px; }
-  .chip b { font-size:16px; }
-  .chip.bad { border-color:var(--bad); color:var(--bad); }
-  .chip.ok b { color:var(--ok); }
-  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .tile { background:var(--card); border:1px solid var(--line); border-radius:20px; padding:18px 16px;
-    text-align:left; color:var(--fg); cursor:pointer; display:flex; flex-direction:column; gap:14px;
-    min-height:132px; transition:all .3s ease; font:inherit; }
-  .tile .ic { font-size:34px; width:56px; height:56px; border-radius:50%; display:grid; place-items:center;
-    background:#1e2530; transition:all .3s ease; filter:grayscale(1) brightness(.8); }
-  .tile .nm { font-weight:650; font-size:16px; }
-  .tile .st { color:var(--muted); font-size:13px; margin-top:-10px; }
-  .tile.on { border-color:#6b5520; background:linear-gradient(160deg,#2a2412,#151a20 70%); }
-  .tile.on .ic { background:radial-gradient(circle,#fff1bf,var(--on) 70%); filter:none;
-    box-shadow:0 0 28px 4px #ffc94d55; }
-  .tile.on .st { color:var(--on); }
-  .tile.busy { animation:pulse 1s ease-in-out infinite; }
-  .tile:active { transform:scale(.97); }
-  #goodnight { grid-column:1 / -1; border:none; border-radius:20px; padding:20px; cursor:pointer;
-    background:linear-gradient(135deg,#2b2f6b,#141833); color:#dfe3ff; font:inherit; font-size:18px;
-    font-weight:700; display:flex; align-items:center; justify-content:center; gap:12px;
-    box-shadow:inset 0 0 0 1px #3c4290; }
-  #goodnight span { font-size:28px; }
-  #goodnight.busy { animation:pulse 1s ease-in-out infinite; }
-  #banner { display:none; border-radius:16px; padding:14px 16px; font-size:15px; line-height:1.5;
-    background:#161b3a; border:1px solid #3c4290; }
-  #banner.bad { background:#3a1616; border-color:var(--bad); }
   /* Garage page: buttons styled like the HA (Frosted Glass) button cards */
   .pills { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
   .pill { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:10px 4px;
@@ -77,9 +48,25 @@
   .gbtn span { font-size:18px; font-weight:500; letter-spacing:.2px; }
   .gbtn:active { transform:scale(.96); background:linear-gradient(160deg,rgba(150,170,200,.30),rgba(70,80,100,.22)); }
   .gbtn.busy { animation:pulse 1s ease-in-out infinite; }
-  .gbtn.now-open { background:linear-gradient(160deg,rgba(255,159,10,.30),rgba(60,50,30,.25)); border-color:rgba(255,159,10,.45); }
-  .gbtn.now-close { background:linear-gradient(160deg,rgba(10,132,255,.30),rgba(30,45,70,.25)); border-color:rgba(10,132,255,.45); }
-  #note, #gNote { text-align:center; color:var(--muted); font-size:12px; min-height:1.2em; }
+  /* Garage door: one big round toggle (v2026.11.21-1). Ring colour = state: green closed, orange open, blue moving */
+  .gwrap { display:grid; place-items:center; padding:8px 0 2px; }
+  .gcircle { --ring:#7d8896; position:relative; width:min(54vw,210px,28dvh); aspect-ratio:1; border-radius:50%; cursor:pointer;
+    border:none; color:var(--fg); font:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    background:radial-gradient(circle at 50% 30%,rgba(255,255,255,.10),rgba(255,255,255,.02) 55%),linear-gradient(160deg,#1b222d,#10151c);
+    box-shadow:0 0 0 6px color-mix(in srgb,var(--ring) 85%,transparent), 0 0 46px 6px color-mix(in srgb,var(--ring) 30%,transparent),
+      0 14px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
+    transition:transform .12s ease, box-shadow .4s ease; }
+  .gcircle svg { width:64px; height:64px; fill:var(--ring); transition:fill .4s ease; }
+  .gcircle b { font-size:26px; font-weight:700; letter-spacing:.2px; }
+  .gcircle span { font-size:17px; color:var(--muted); }
+  .gcircle:active { transform:scale(.96); }
+  .gcircle.closed { --ring:var(--ok); } .gcircle.open { --ring:#ff9f0a; }
+  .gcircle.moving { --ring:#0a84ff; animation:gpulse 1.4s ease-in-out infinite; }
+  .gcircle.unknown { --ring:var(--bad); }
+  .gcircle.busy { opacity:.7; }
+  @keyframes gpulse { 50% { box-shadow:0 0 0 10px color-mix(in srgb,var(--ring) 60%,transparent), 0 0 60px 12px color-mix(in srgb,var(--ring) 40%,transparent),
+      0 14px 30px rgba(0,0,0,.45); } }
+  #gNote { text-align:center; color:var(--muted); font-size:12px; min-height:1.2em; }
   @keyframes pulse { 50% { opacity:.55; } }
   main { padding-bottom:96px; }
   section[hidden] { display:none !important; }
@@ -99,12 +86,6 @@
   #tab-garage header { text-align:center; }
   #gSub { margin:0; text-align:center; color:var(--muted); font-size:18px; }
   #gNote { margin-top:auto; }
-  /* Controls tab: water valve (close only) */
-  #valve { display:flex; flex-direction:column; gap:12px; margin-top:18px; }
-  #valve h2 { margin:0; font-size:20px; text-align:center; }
-  .gbtn.wide { min-height:84px; flex-direction:row; gap:12px; }
-  .gbtn.wide svg { width:34px; height:34px; }
-  .gbtn.attn { background:linear-gradient(160deg,rgba(255,159,10,.30),rgba(60,50,30,.25)); border-color:rgba(255,159,10,.45); }
   /* Front Door tab: lock / unlock (unlock asks first) + battery */
   #tab-door:not([hidden]) { flex:1; }
   #tab-door header { text-align:center; }
@@ -113,7 +94,6 @@
   .gbtn.now-unlocked { background:linear-gradient(160deg,rgba(255,159,10,.30),rgba(60,50,30,.25)); border-color:rgba(255,159,10,.45); }
   #dSub { margin:0; text-align:center; color:var(--muted); font-size:18px; }
   #dNote { margin-top:auto; text-align:center; color:var(--muted); font-size:12px; min-height:1.2em; }
-  #vNote { margin:0; text-align:center; color:var(--muted); font-size:14px; }
   nav button.active { color:var(--fg); background:var(--card); }
   .app { display:flex; align-items:center; gap:16px; background:var(--card); border:1px solid var(--line);
     border-radius:20px; padding:16px; }
@@ -155,21 +135,14 @@
   html.light { --bg:#eef2f8; --card:#ffffff; --line:#e1e6ee; --fg:#1c1f24; --muted:#6b7280;
     --on:#e0a020; --night:#4b56d8; --ok:#1f9d55; --bad:#d93025; }
   html.light body { background:linear-gradient(180deg,#dce8fb 0%,#e9eff9 40%,#f2f4f7 100%) fixed; }
-  html.light .chip, html.light .tile, html.light .pill, html.light .upd, html.light .app, html.light .steps {
+  html.light .pill, html.light .upd, html.light .app, html.light .steps {
     box-shadow:0 2px 10px rgba(30,50,90,.06); }
-  html.light .tile .ic { background:#eef1f5; filter:grayscale(1) brightness(1.05); }
-  html.light .tile.on { border-color:#f0d27a; background:linear-gradient(160deg,#fff4d6,#ffffff 70%); }
-  html.light .tile.on .ic { box-shadow:0 0 22px 2px #ffc94d88; }
-  html.light #goodnight { background:linear-gradient(135deg,#e3e6ff,#cfd5ff); color:#262b6b; box-shadow:inset 0 0 0 1px #b4bcff; }
-  html.light #banner { background:#eef0ff; border-color:#b4bcff; }
-  html.light #banner.bad { background:#fdecea; border-color:var(--bad); }
   html.light .pill.warn b { color:#c76b00; }
+  html.light .gcircle { background:radial-gradient(circle at 50% 30%,#ffffff,#f3f6fb 70%); color:#1c1f24;
+    box-shadow:0 0 0 6px var(--ring), 0 0 40px 4px color-mix(in srgb,var(--ring) 28%,transparent), 0 10px 24px rgba(30,50,90,.14); }
   html.light .gbtn { background:linear-gradient(160deg,#ffffff,#f3f6fb); border-color:#e1e6ee; color:#2b2f36;
     box-shadow:0 4px 14px rgba(30,50,90,.10); backdrop-filter:none; -webkit-backdrop-filter:none; }
   html.light .gbtn:active { background:#e9eef7; }
-  html.light .gbtn.now-open { background:linear-gradient(160deg,#fff1d6,#ffffff); border-color:#f5b041; }
-  html.light .gbtn.attn { background:linear-gradient(160deg,#fff1d6,#ffffff); border-color:#f5b041; }
-  html.light .gbtn.now-close { background:linear-gradient(160deg,#dcebff,#ffffff); border-color:#5aa0ff; }
   html.light nav { background:#ffffffee; border-top-color:#e5e7eb; }
   html.light nav button.active { background:#e6edfb; color:#1a2a9c; }
   html.light nav .gico svg { fill:#d99a00; }
@@ -190,41 +163,6 @@
   <button class="mode" id="localBtn">🏠 <b>Internet route isn't answering.</b> Tap to switch to local mode (works on home Wi-Fi without internet)</button>
   <button class="mode" id="netBtn">🌐 Back to internet mode</button>
   <button id="updBanner">✨ <b>Update available</b>. Tap to update now</button>
- <section id="tab-controls" hidden>
-  <header>
-    <h1 id="hello">Home</h1>
-    <p id="sub">Tap a tile to switch it</p>
-  </header>
-
-
-  <div class="status">
-    <div class="chip" id="door">🔐 <span>Door <b>…</b></span></div>
-    <div class="chip" id="count">💡 <span><b>…</b> lights on</span></div>
-  </div>
-
-  <div class="grid">
-    <button class="tile" data-t="curtain"><div class="ic">🪟</div><div class="nm">Curtain light</div><div class="st">…</div></button>
-    <button class="tile" data-t="food"><div class="ic">🍽️</div><div class="nm">Food table</div><div class="st">…</div></button>
-    <button class="tile" data-t="mens"><div class="ic">🛋️</div><div class="nm">Men's sitting room</div><div class="st">…</div></button>
-    <button class="tile" id="refresh" style="justify-content:center;align-items:center;text-align:center">
-      <div class="ic" style="filter:none">🔄</div><div class="st" style="margin:0">Refresh</div></button>
-    <button id="goodnight"><span>🌙</span> Goodnight</button>
-  </div>
-
-  <div id="valve">
-    <h2>Water valve</h2>
-    <div class="pills">
-      <div class="pill" id="pValve"><small>Valve</small><b>…</b></div>
-      <div class="pill" id="pFlow"><small>Flow</small><b>…</b></div>
-    </div>
-    <button class="gbtn wide" id="valveClose"><svg viewBox="0 0 24 24"><path d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20Z"/></svg><span>Close valve</span></button>
-    <p id="vNote">Close only. The 04:30 schedule opens it.</p>
-  </div>
-
-  <div id="banner"></div>
-  <div id="note" class="note">Connecting to home…</div>
- </section>
-
  <section id="tab-garage">
   <header>
     <h1>Garage Door</h1>
@@ -233,13 +171,11 @@
     <div class="pill" id="pDoor"><small>Door</small><b>…</b></div>
     <div class="pill" id="pCar"><small>Parking</small><b>…</b></div>
   </div>
-  <div class="gbtns">
-    <button class="gbtn" data-g="open"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12Z"/></svg><span>Open</span></button>
-    <button class="gbtn" data-g="stop"><svg viewBox="0 0 24 24"><path d="M18,18H6V6H18V18Z"/></svg><span>Stop</span></button>
-    <button class="gbtn" data-g="close"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z"/></svg><span>Close</span></button>
-  </div>
   <p id="gSub">…</p>
-  <div id="gNote" class="note"></div>
+  <div class="gwrap">
+    <button class="gcircle" id="gToggle" aria-label="Garage door"><svg viewBox="0 0 24 24"><path id="gIcon" d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z"/></svg><b id="gState">…</b><span id="gAction">Connecting…</span></button>
+  </div>
+  <div id="gNote" class="note">Connecting to home…</div>
  </section>
 
  <section id="tab-door" hidden>
@@ -265,14 +201,12 @@
   </header>
   <div class="app">
     <img src="icon-192.png" alt="">
-    <div><b>Home</b><p>Garage door, front door, lights &amp; goodnight · works anywhere</p></div>
+    <div><b>Home</b><p>Garage door &amp; front door · works anywhere</p></div>
   </div>
 
   <div class="upd">
     <div class="row"><span>Appearance</span><b id="themeNow">…</b></div>
     <div class="seg"><button data-theme="dark">🌙 Dark</button><button data-theme="light">☀️ Light</button></div>
-    <div class="row" style="margin-top:14px"><span>Controls tab</span><b id="ctlNow">…</b></div>
-    <div class="seg"><button data-ctl="show">💡 Show</button><button data-ctl="hide">🚫 Hide</button></div>
     <div class="row" style="margin-top:14px"><span>Vibration on tap</span><b id="hapNow">…</b></div>
     <div class="seg"><button data-hap="on">📳 On</button><button data-hap="off">🔕 Off</button></div>
     <div class="row" style="margin-top:14px"><span>Vibration strength</span><b id="hlNow">…</b></div>
@@ -317,11 +251,10 @@
 <nav>
   <button class="active" data-tab="garage"><span class="gico"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z"/></svg></span>Garage Door</button>
   <button data-tab="door"><span class="gico"><svg viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/></svg></span>Front Door</button>
-  <button data-tab="controls"><span>💡</span>Controls</button>
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.11.15-1";
+const APP_VERSION = "2026.11.21-1";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -338,9 +271,10 @@ if (!CMD || !STATE) {
   document.querySelector("nav").remove();
   throw new Error("no private link");
 }
-const $ = s => document.querySelector(s), banner = $("#banner"),
+const $ = s => document.querySelector(s),
   note = { set textContent(t) { document.querySelectorAll(".note").forEach(e => e.textContent = t); } };
-let vClosed = null, vChecks = [], dChecks = [], dState = null, dOpen = null;
+let dChecks = [], dState = null, dOpen = null;
+const GICON = { open: "M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12Z", closed: "M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z" };
 let timer = null, gPoll = null, gPolls = 0, gState = null, gSince = null;
 
 // "under a minute" / "12 minutes" / "2 hours 5 min" / "3 days"
@@ -369,14 +303,7 @@ function setTheme(t) {
 document.querySelectorAll("[data-theme]").forEach(b => b.onclick = () => setTheme(b.dataset.theme));
 setTheme(localStorage.getItem("home.theme") === "light" ? "light" : "dark");
 
-function setControls(v) {  // hides the lights/Goodnight tab on this phone only; saved like the theme
-  localStorage.setItem("home.controls", v);
-  $('nav button[data-tab="controls"]').hidden = v === "hide";
-  $("#ctlNow").textContent = v === "hide" ? "🚫 Hidden" : "💡 Shown";
-  document.querySelectorAll("[data-ctl]").forEach(b => b.classList.toggle("sel", b.dataset.ctl === v));
-}
-document.querySelectorAll("[data-ctl]").forEach(b => b.onclick = () => setControls(b.dataset.ctl));
-setControls(localStorage.getItem("home.controls") === "show" ? "show" : "hide");  // hidden unless turned on
+localStorage.removeItem("home.controls");  // Controls tab removed in v2026.11.21-1
 
 // Haptics: a short buzz on every button tap (on by default, saved per phone). Android uses the Vibration API;
 // iPhone Safari has none, so it taps a hidden iOS 18 switch, which gives the system tick. Costs no messages.
@@ -394,7 +321,7 @@ function buzz(big) {
   if (navigator.vibrate) navigator.vibrate(HAP_LEVELS[hapLevel()][big ? 1 : 0]); else iosTick.click();
 }
 document.addEventListener("click", e => {  // capture phase: buzzes before the button's own handler (and confirm())
-  const b = e.target.closest("button"); if (b && !b.dataset.hl) buzz(b.matches(".gbtn, #goodnight"));
+  const b = e.target.closest("button"); if (b && !b.dataset.hl) buzz(b.matches(".gbtn, .gcircle"));
 }, true);
 function setHapLevel(v) {
   localStorage.setItem("home.hapLevel", v);
@@ -412,21 +339,9 @@ function setHaptics(v) {
 document.querySelectorAll("[data-hap]").forEach(b => b.onclick = () => setHaptics(b.dataset.hap));
 setHaptics(localStorage.getItem("home.haptics") === "off" ? "off" : "on");
 
-const h = new Date().getHours();
-$("#hello").textContent = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-
 function render(m) {
   clearTimeout(timer);
   document.querySelectorAll(".busy").forEach(e => e.classList.remove("busy"));
-  for (const [k, s] of Object.entries(m.states || {})) {
-    const t = document.querySelector(`.tile[data-t="${k}"]`); if (!t) continue;
-    t.classList.toggle("on", s === "on");
-    t.querySelector(".st").textContent = s === "on" ? "On" : s === "off" ? "Off" : "Unavailable";
-  }
-  const locked = m.door === "locked", door = $("#door");
-  door.className = "chip " + (locked ? "ok" : "bad");
-  door.innerHTML = (locked ? "🔐" : "🔓") + ` <span>Door <b>${locked ? "locked" : (m.door || "?")}</b></span>`;
-  $("#count b").textContent = m.lights_on ?? "?";
   const g = m.garage || "?", moving = g === "opening" || g === "closing";
   const known = ["open", "closed", "opening", "closing"].includes(g), G = known ? g[0].toUpperCase() + g.slice(1) : "Unavailable";
   const pill = (id, cls, txt) => { const e = $(id); e.className = "pill " + cls; e.querySelector("b").textContent = txt; };
@@ -435,19 +350,6 @@ function render(m) {
   // convert the NAS time to phone time, so a wrong phone clock doesn't skew "for X minutes"
   gState = g; gSince = m.garage_since ? Date.now() / 1000 - (m.ts - m.garage_since) : null;
   showSince();
-  // Water valve: the switch state decides. The valve only sends flow while open and often never sends 0 after
-  // closing, so HA keeps the last running value (e.g. 1.4 m³/h) for hours; flow is shown only while open.
-  const vs = m.valve, fl = parseFloat(m.valve_flow), flowOk = Number.isFinite(fl);
-  const lpm = flowOk ? Math.round(fl * 1000 / 60 * 10) / 10 : null;  // m³/h → L/min
-  vClosed = vs === "off"; const vOpen = vs === "on";
-  if (vs !== undefined) {
-    pill("#pValve", vClosed ? "ok" : vOpen ? "warn" : "bad", vClosed ? "Closed" : vOpen ? "Open" : "Unavailable");
-    pill("#pFlow", vClosed ? "ok" : !vOpen || !flowOk ? "bad" : "warn",
-      vClosed ? "Stopped" : vOpen && flowOk ? `${lpm} L/min` : "Unavailable");
-    $("#valveClose").classList.toggle("attn", vOpen);
-    $("#vNote").textContent = vOpen ? "⚠️ Water is running. Tap Close valve."
-      : !vClosed ? "⚠️ Valve status unavailable. Close is still sent if tapped." : "Close only. The 04:30 schedule opens it.";
-  }
   // Front door (Bluetooth lock): Lock pill + battery %; door contact under the buttons
   if (m.door_battery !== undefined) {
     const d = m.door, D = { locked: "Locked", unlocked: "Unlocked", locking: "Locking…", unlocking: "Unlocking…", jammed: "Jammed" }[d];
@@ -461,24 +363,17 @@ function render(m) {
     if (m.event === "door_open") $("#dSub").textContent = "⚠️ Door is open. Close it, then lock.";
     else if (d === "jammed") $("#dSub").textContent = "⚠️ Lock jammed. Check the door.";
   }
-  document.querySelector('.gbtn[data-g="open"]').classList.toggle("now-open", g === "opening" || g === "open");
-  document.querySelector('.gbtn[data-g="close"]').classList.toggle("now-close", g === "closing");
+  // Round garage door button: what it shows and what the next tap does (the relay decides from HA's live state)
+  $("#gToggle").className = "gcircle " + (!known ? "unknown" : moving ? "moving" : g);
+  $("#gState").textContent = moving ? G + "…" : G;
+  $("#gAction").textContent = !known ? "Can't tap now" : moving ? "Tap to stop" : g === "closed" ? "Tap to open" : "Tap to close";
+  $("#gIcon").setAttribute("d", g === "closed" || g === "closing" ? GICON.closed : GICON.open);
   // local mode: while the door moves (~18 s), re-read GET api/status (free, never published) every 3 s until it settles (max ~45 s).
   // Internet mode doesn't poll (each ask costs ntfy messages); the relay sends one update when it settles.
   clearTimeout(gPoll);
   if (LOCAL && moving && gPolls < 15) { gPolls++; gPoll = setTimeout(localPeek, 3000); } else if (!moving) gPolls = 0;
-  if (m.event === "goodnight") {
-    banner.style.display = "block";
-    banner.className = locked ? "" : "bad";
-    banner.innerHTML = locked
-      ? `🌙 <b>Goodnight!</b> ${m.lights_on ? m.lights_on + " light(s) still report on." : "All lights are off."} The front door is locked.`
-      : `⚠️ <b>Lights ${m.lights_on ? "sent off" : "are off"}, but the front door is ${m.door}.</b> Lock it before you sleep.`;
-    if (m.garage && m.garage !== "closed") {
-      banner.className = "bad";
-      banner.innerHTML += ` <br>🚗 <b>The garage door is ${m.garage}.</b>`;
-    }
-  }
-  note.textContent = "Updated " + new Date(m.ts * 1000).toLocaleTimeString();
+  note.textContent = m.event === "garage_unknown" ? "⚠️ Garage door status unavailable, nothing sent."
+    : "Updated " + new Date(m.ts * 1000).toLocaleTimeString();
 }
 
 function offerLocal() { if (!LOCAL) $("#localBtn").style.display = "block"; }
@@ -494,7 +389,9 @@ async function send(cmd, el) {
   if (LOCAL) {
     try {
       const ctl = new AbortController(); setTimeout(() => ctl.abort(), 8000);
-      const r = await fetch("api/cmd", { method: "POST", body: cmd, headers: { "X-Home-Key": CMD }, signal: ctl.signal });
+      const r = cmd === "status"  // GET api/status is free (never published to ntfy); POST status cost 1 message per open
+        ? await fetch("api/status", { headers: { "X-Home-Key": CMD }, signal: ctl.signal })
+        : await fetch("api/cmd", { method: "POST", body: cmd, headers: { "X-Home-Key": CMD }, signal: ctl.signal });
       if (r.status === 403) { clearTimeout(timer); note.textContent = "⚠️ Key not accepted. Reopen your setup link."; return; }
       if (!r.ok) throw new Error(r.status);
       render(await r.json());
@@ -504,8 +401,14 @@ async function send(cmd, el) {
     }
     return;
   }
-  try { await fetch(`${NTFY}/${CMD}`, { method: "POST", body: cmd }); }
-  catch (e) { note.textContent = "⚠️ No internet connection"; offerLocal(); }
+  try {
+    const r = await fetch(`${NTFY}/${CMD}`, { method: "POST", body: cmd });
+    if (r.status === 429) {  // ntfy free quota (≈250/day) used up; resets 03:00
+      clearTimeout(timer); document.querySelectorAll(".busy").forEach(x => x.classList.remove("busy"));
+      note.textContent = "⚠️ Internet route used up today's free messages (resets 03:00). Use local mode on home Wi-Fi.";
+      offerLocal();
+    }
+  } catch (e) { note.textContent = "⚠️ No internet connection"; offerLocal(); }
 }
 
 // Automatic status requests cost 2 ntfy messages each in internet mode (free quota ≈250/day),
@@ -522,7 +425,6 @@ function autoStatus(fresh) {  // fresh: the connection just (re)opened
 }
 
 if (LOCAL) {
-  $("#sub").textContent = "🏠 Local mode · works without internet";
   $("#netBtn").style.display = "block";
   send("status");
 } else {
@@ -540,21 +442,16 @@ $("#modeHint").textContent = LOCAL
   ? "Local mode talks straight to the NAS, so it only works on your home Wi-Fi. Add this page to your home screen too, as a backup for when the internet is down."
   : "Local mode skips the internet and talks straight to the NAS. Use it on home Wi-Fi when the internet is down.";
 
-document.querySelectorAll(".tile[data-t]").forEach(t => t.onclick = () => send(t.dataset.t + "_toggle", t));
-document.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
-  const a = b.dataset.g;
-  gPolls = 0; send("garage_" + a, b);
-});
-// The valve reports a close 40-70 s late. Local mode re-reads GET api/status (never published to ntfy, so free)
-// at 15/45/90 s until it shows closed. Internet mode sends nothing extra: the relay publishes once when closed.
+let gTapAt = 0;
+$("#gToggle").onclick = () => {
+  const b = $("#gToggle");  // a quick double tap must not open-then-stop: ignore taps while busy and for 2.5 s after one
+  if (b.classList.contains("busy") || b.classList.contains("unknown") || Date.now() - gTapAt < 2500) return;
+  gTapAt = Date.now(); gPolls = 0; send("garage_toggle", b);
+};
+// Local mode re-reads GET api/status (never published to ntfy, so free).
 async function localPeek() {
   try { const r = await fetch("api/status", { headers: { "X-Home-Key": CMD } }); if (r.ok) render(await r.json()); } catch (e) {}
 }
-$("#valveClose").onclick = () => {
-  vChecks.forEach(clearTimeout);
-  send("valve_close", $("#valveClose"));
-  if (LOCAL) vChecks = [15, 45, 90].map(s => setTimeout(() => { if (!vClosed) localPeek(); }, s * 1000));
-};
 // Lock first tap; Unlock asks first. A slow Bluetooth answer: the relay publishes once when it settles;
 // local mode re-reads GET api/status (free) at 10 and 25 s instead.
 document.querySelectorAll("[data-d]").forEach(b => b.onclick = () => {
@@ -565,11 +462,7 @@ document.querySelectorAll("[data-d]").forEach(b => b.onclick = () => {
   send("door_" + a, b);
   if (LOCAL) dChecks = [10, 25].map(s => setTimeout(() => { if (dState === "locking" || dState === "unlocking") localPeek(); }, s * 1000));
 });
-localStorage.removeItem("home.more");  // old Garage › See more setting (valve moved to Controls in 10.31-3)
-$("#refresh").onclick = () => send("status", $("#refresh"));
-$("#goodnight").onclick = () => {
-  if (confirm("Turn off all the lights in the house?")) { banner.style.display = "none"; send("goodnight", $("#goodnight")); }
-};
+localStorage.removeItem("home.more");  // old Garage › See more setting
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { autoStatus(); checkUpdates(false); } });
 
 // Tabs

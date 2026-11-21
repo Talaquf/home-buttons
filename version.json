@@ -1,4 +1,4 @@
 {
-  "version": "2026.11.15-1",
-  "notes": "App tab: vibration strength 1–5 (default 3, stronger than before); tap a level to feel it"
+  "version": "2026.11.21-1",
+  "notes": "Garage Door: one big round button (open / close / stop while moving); Controls tab removed"
 }
