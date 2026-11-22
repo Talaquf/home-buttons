@@ -97,6 +97,23 @@
   .gbtns.two { grid-template-columns:repeat(2,1fr); }
   #dSub { margin:0; text-align:center; color:var(--muted); font-size:18px; }
   #dNote { margin-top:auto; text-align:center; color:var(--muted); font-size:12px; min-height:1.2em; }
+  /* History tab (v2026.11.22-1, like the myQ app): day groups, round icon, event, who, time */
+  #tab-history header { text-align:center; }
+  .hlist { display:flex; flex-direction:column; }
+  .hday { text-align:center; font-size:17px; font-weight:600; color:var(--fg); padding:14px 0 8px; border-bottom:1px solid var(--line); }
+  .hrow { display:grid; grid-template-columns:52px 1fr auto; align-items:center; gap:12px; padding:12px 2px; border-bottom:1px solid var(--line); }
+  .hico { --c:var(--muted); width:52px; height:52px; border-radius:50%; display:grid; place-items:center;
+    background:color-mix(in srgb,var(--c) 16%,transparent); }
+  .hico svg { width:28px; height:28px; fill:var(--c); }
+  .hico.ok { --c:var(--ok); } .hico.warn { --c:var(--amber,#ff9f0a); } .hico.move { --c:var(--sky,#0a84ff); } .hico.bad { --c:var(--bad); }
+  .htxt { min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .htxt small { font-size:15px; color:var(--muted); }
+  .htxt b { font-size:18px; }
+  .htxt i { font-style:normal; font-size:13px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .htime { font-size:15px; color:var(--muted); white-space:nowrap; }
+  .hempty { text-align:center; color:var(--muted); padding:28px 0; }
+  #hNote { text-align:center; color:var(--muted); font-size:12px; min-height:1.2em; }
+  #hRefresh.busy { animation:pulse 1s ease-in-out infinite; }
   nav button.active { color:var(--fg); background:var(--card); }
   .app { display:flex; align-items:center; gap:16px; background:var(--card); border:1px solid var(--line);
     border-radius:20px; padding:16px; }
@@ -289,6 +306,16 @@ html.ember #installBtn { background:linear-gradient(135deg,#e9a16a,#c9733d); col
   <div id="dNote" class="note"></div>
  </section>
 
+ <section id="tab-history" hidden>
+  <header>
+    <h1>History</h1>
+  </header>
+  <div class="seg seg3" id="hSeg"><button data-hf="all">All</button><button data-hf="g">Garage Door</button><button data-hf="d">Front Door</button></div>
+  <div class="hlist" id="hList"><div class="hempty">Loading…</div></div>
+  <button class="linkbtn" id="hRefresh">🔄 Refresh</button>
+  <div id="hNote"></div>
+ </section>
+
  <section id="tab-install" hidden>
   <header>
     <h1>App</h1>
@@ -347,10 +374,11 @@ html.ember #installBtn { background:linear-gradient(135deg,#e9a16a,#c9733d); col
 <nav>
   <button class="active" data-tab="garage"><span class="gico"><svg viewBox="0 0 24 24"><path d="M22 9V20H20V11H4V20H2V9L12 5L22 9M19 12H5V14H19V12M19 18H5V20H19V18M19 15H5V17H19V15Z"/></svg></span>Garage Door</button>
   <button data-tab="door"><span class="gico"><svg viewBox="0 0 24 24"><path d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z"/></svg></span>Front Door</button>
+  <button data-tab="history"><span class="gico"><svg viewBox="0 0 24 24"><path d="M13.5,8H12V13L16.28,15.54L17,14.33L13.5,12.25V8M13,3A9,9 0 0,0 4,12H1L4.96,16.03L9,12H6A7,7 0 0,1 13,5A7,7 0 0,1 20,12A7,7 0 0,1 13,19C11.07,19 9.32,18.21 8.06,16.94L6.64,18.36C8.27,20 10.5,21 13,21A9,9 0 0,0 22,12A9,9 0 0,0 13,3Z"/></svg></span>History</button>
   <button data-tab="install"><span>⚙️</span>App</button>
 </nav>
 <script>
-const APP_VERSION = "2026.11.21-10";
+const APP_VERSION = "2026.11.22-1";
 const LOCAL = location.protocol === "http:";            // opened from the NAS on the LAN
 const LAN_URL = "http://192.168.1.157:8765/";
 const NET_URL = "https://talaquf.github.io/home-buttons/";
@@ -458,6 +486,7 @@ if (!navigator.vibrate) { $("#hlSeg").style.display = "none"; $("#hlNow").parent
 
 function render(m) {
   clearTimeout(timer);
+  histSeen(m);
   document.querySelectorAll(".busy").forEach(e => e.classList.remove("busy"));
   const g = m.garage || "?", moving = g === "opening" || g === "closing";
   const known = ["open", "closed", "opening", "closing"].includes(g), G = known ? g[0].toUpperCase() + g.slice(1) : "Unavailable";
@@ -512,8 +541,8 @@ async function send(cmd, el) {
   if (LOCAL) {
     try {
       const ctl = new AbortController(); setTimeout(() => ctl.abort(), 8000);
-      const r = cmd === "status"  // GET api/status is free (never published to ntfy); POST status cost 1 message per open
-        ? await fetch("api/status", { headers: { "X-Home-Key": CMD }, signal: ctl.signal })
+      const r = cmd === "status" || cmd === "history"  // GET api/status + api/history are free (never published to ntfy)
+        ? await fetch("api/" + cmd, { headers: { "X-Home-Key": CMD }, signal: ctl.signal })
         : await fetch("api/cmd", { method: "POST", body: cmd, headers: { "X-Home-Key": CMD }, signal: ctl.signal });
       if (r.status === 403) { clearTimeout(timer); note.textContent = "⚠️ Key not accepted. Reopen your setup link."; return; }
       if (!r.ok) throw new Error(r.status);
@@ -605,10 +634,67 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) {
   if (!LOCAL && es && es.readyState === EventSource.CLOSED) connect();  // onopen then asks for status once
   autoStatus(); checkUpdates(false); } });
 
+
+// History tab (v2026.11.22-1). The relay reads HA's logbook (last 7 days, garage door + front door lock) and answers
+// "history" with the normal state + the events. Internet mode: 2 ntfy messages per load, only when the tab opens and the
+// saved copy is older than 10 min, or on Refresh. Local mode: GET api/history (free). No polling.
+const HEV = { open: ["Opened", "warn"], closed: ["Closed", "ok"], stopped: ["Stopped", "move"], reversed: ["Reversed", "move"],
+  locked: ["Locked", "ok"], unlocked: ["Unlocked", "warn"], jammed: ["Jammed", "bad"] };
+let hist = null, hStale = false, hLast = null;
+try { hist = JSON.parse(localStorage.getItem("home.hist")); } catch (e) {}
+function hDay(t) {
+  const d = new Date(t * 1000), day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime(),
+    n = Math.round((day(new Date()) - day(d)) / 86400000);
+  return n === 0 ? "Today" : n === 1 ? "Yesterday" : d.toLocaleDateString([], { weekday: "long", day: "numeric", month: "short" });
+}
+function renderHistory() {
+  const f = ["g", "d"].includes(localStorage.getItem("home.histf")) ? localStorage.getItem("home.histf") : "all";
+  document.querySelectorAll("[data-hf]").forEach(b => b.classList.toggle("sel", b.dataset.hf === f));
+  if (!hist) return;
+  const list = $("#hList"), rows = hist.history.filter(e => f === "all" || e[1] === f);
+  list.textContent = "";
+  if (!rows.length) list.innerHTML = '<div class="hempty">No activity in the last 7 days</div>';
+  let last = null;
+  for (const [t, k, ev, w] of rows) {
+    const day = hDay(t);
+    if (day !== last) { const h = document.createElement("div"); h.className = "hday"; h.textContent = day; list.append(h); last = day; }
+    const [label, cls] = HEV[ev] || [ev, ""], icon = k === "g" ? (ev === "closed" ? GICON.closed : GICON.open)
+      : (ev === "unlocked" ? DICON.unlocked : DICON.locked);
+    const r = document.createElement("div"); r.className = "hrow";
+    r.innerHTML = `<div class="hico ${cls}"><svg viewBox="0 0 24 24"><path d="${icon}"/></svg></div>` +
+      `<div class="htxt"><small>${k === "g" ? "Garage Door" : "Front Door"}</small><b>${label}</b><i></i></div><div class="htime"></div>`;
+    r.querySelector("i").textContent = w >= 0 && hist.who[w] ? "by " + hist.who[w] : "";
+    r.querySelector(".htime").textContent = new Date(t * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    list.append(r);
+  }
+  const old = rows.length ? hDay(rows[rows.length - 1][0]) : null;
+  $("#hNote").textContent = (hStale ? "New activity since. Tap Refresh. · " : "") +
+    "Updated " + new Date(hist.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+function histSeen(m) {  // every state payload passes here
+  if (m.history) {
+    hist = { at: Date.now(), history: m.history, who: m.who || [] }; hStale = false;
+    try { localStorage.setItem("home.hist", JSON.stringify(hist)); } catch (e) {}
+    $("#hRefresh").classList.remove("busy"); renderHistory();
+  }
+  const now = (m.garage || "") + "|" + (m.door || "");  // a door moved after the last load → hint, no automatic fetch
+  if (hLast && now !== hLast && hist && !m.history) { hStale = true; renderHistory(); }
+  hLast = now;
+}
+function loadHistory(force) {
+  renderHistory();
+  if (!force && hist && Date.now() - hist.at < 600000) return;
+  if ($("#hRefresh").classList.contains("busy")) return;
+  send("history", $("#hRefresh"));
+}
+$("#hRefresh").onclick = () => loadHistory(true);
+document.querySelectorAll("[data-hf]").forEach(b => b.onclick = () => { localStorage.setItem("home.histf", b.dataset.hf); renderHistory(); });
+
 // Tabs
 function showTab(name) {
   document.querySelectorAll("section").forEach(s => s.hidden = s.id !== "tab-" + name);
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  if (name === "history") loadHistory(false);
 }
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
 
